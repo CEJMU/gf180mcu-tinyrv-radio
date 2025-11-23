@@ -39,7 +39,7 @@ module chip_core #(
     assign input_pd = '0;
 
     // Set the bidir as output
-    assign bidir_oe = '1;
+    assign bidir_oe = -1;
     assign bidir_cs = '0;
     assign bidir_sl = '0;
     assign bidir_ie = ~bidir_oe;
@@ -49,53 +49,32 @@ module chip_core #(
     logic _unused;
     assign _unused = &bidir_in;
 
-    logic [NUM_BIDIR_PADS-1:0] count;
+   cpu cpu (
+    `ifdef USE_POWER_PINS
+    .VDD(VDD),
+    .VSS(VSS),
+    `endif
+        .clk(clk),
+        .reset(rst_n),
+        .intr_ext(input_in[0]),
+        .so(input_in[1]),
+        .gpio_in(input_in[5:2]),
 
-    always_ff @(posedge clk) begin
-        if (!rst_n) begin
-            count <= '0;
-        end else begin
-            if (&input_in) begin
-                count <= count + 1;
-            end
-        end
-    end
+        .si(bidir_out[0]),
+        .sclk(bidir_out[1]),
+        .sram_ce(bidir_out[2]),
+        .tx(bidir_out[3]),
+        .gpio_out(bidir_out[7:4]),
 
-    logic [7:0] sram_0_out;
-
-    gf180mcu_fd_ip_sram__sram512x8m8wm1 sram_0 (
-        `ifdef USE_POWER_PINS
-        .VDD  (VDD),
-        .VSS  (VSS),
-        `endif
-
-        .CLK  (clk),
-        .CEN  (1'b1),
-        .GWEN (1'b0),
-        .WEN  (8'b0),
-        .A    ('0),
-        .D    ('0),
-        .Q    (sram_0_out)
-    );
-
-    logic [7:0] sram_1_out;
-
-    gf180mcu_fd_ip_sram__sram512x8m8wm1 sram_1 (
-        `ifdef USE_POWER_PINS
-        .VDD  (VDD),
-        .VSS  (VSS),
-        `endif
-
-        .CLK  (clk),
-        .CEN  (1'b1),
-        .GWEN (1'b0),
-        .WEN  (8'b0),
-        .A    ('0),
-        .D    ('0),
-        .Q    (sram_1_out)
-    );
-
-    assign bidir_out = count ^ {24'd0, sram_0_out, sram_1_out};
+        .cos_ds(bidir_out[8]),
+        .cos_ds_n(bidir_out[9]),
+        .sin_ds(bidir_out[10]),
+        .sin_ds_n(bidir_out[11]),
+        .lo_i(bidir_out[12]),
+        .lo_q(bidir_out[13]),
+        .lo_ix(bidir_out[14]),
+        .lo_qx(bidir_out[15])
+   );
 
 endmodule
 

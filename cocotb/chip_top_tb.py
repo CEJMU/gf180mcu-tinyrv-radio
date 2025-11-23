@@ -9,6 +9,7 @@ from pathlib import Path
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, Edge, RisingEdge, FallingEdge, ClockCycles
+from cocotb.types import LogicArray, Logic, Range
 from cocotb_tools.runner import get_runner
 
 sim = os.getenv("SIM", "icarus")
@@ -19,14 +20,30 @@ gl = os.getenv("GL", False)
 
 hdl_toplevel = "chip_top"
 
+
 async def set_defaults(dut):
+    global mem
+    mem = {}
+
+    # for i in range(2**24):
+    #     mem.append(LogicArray(random.randint(0, 255), Range(7, "downto", 0)))
+
+    lines = ()
+    with open("/home/jonathan/Projekte/TinyRV-Radio/asm/misc/fib.txt", "r") as f:
+        lines = f.readlines()
+
+    for i, line in enumerate(lines):
+        mem[i] = LogicArray(int(line, base=16), Range(7, "downto", 0))
+
     dut.input_PAD.value = 0
+
 
 async def enable_power(dut):
     dut.VDD.value = 1
     dut.VSS.value = 0
 
-async def start_clock(clock, freq=50):
+
+async def start_clock(clock, freq=10):
     """Start the clock @ freq MHz"""
     c = Clock(clock, 1 / freq * 1000, "ns")
     cocotb.start_soon(c.start())
@@ -51,6 +68,113 @@ async def start_up(dut):
     await start_clock(dut.clk_PAD)
     await reset(dut.rst_n_PAD)
 
+state = "IDLE"
+mem = list()
+WRITE_CMD = 2
+READ_CMD = 3
+command_reg = LogicArray(0, Range(7, "downto", 0))
+addr_reg = LogicArray(0, Range(23, "downto", 0))
+datain_reg = LogicArray(0, Range(7, "downto", 0))
+dataout_reg = LogicArray(0, Range(31, "downto", 0))
+index = 0
+
+
+def do_spi(dut):
+    global state
+    global mem
+    global WRITE_CMD
+    global READ_CMD
+    global command_reg
+    global addr_reg
+    global datain_reg
+    global dataout_reg
+    global index
+
+    si = dut.bidir_PAD.get()[0]
+
+    if dut.bidir_PAD.get()[2] == 0:
+        # print("IDLE")
+        state = "IDLE"
+        index = 7
+    else:
+        if state == "IDLE":
+            state = "RECV_COMMAND"
+            index = 7
+
+        elif state == "RECV_COMMAND":
+            command_reg[index] = si
+            if index == 0:
+                index = 23
+                state = "RECV_ADDR"
+            else:
+                index = index - 1
+
+        elif state == "RECV_ADDR":
+            addr_reg[index] = si
+            if index == 0:
+                index = 31
+                addr_tmp = addr_reg.integer
+                # print("====================================")
+                # print(f"Received cmd: {command_reg.integer}")
+                # print("====================================")
+
+                if command_reg.integer == READ_CMD:
+                    state = "SEND_DATA"
+                    addr_tmp = addr_reg.integer
+                    # print("====================================")
+                    # print(f"Received addr: {addr_tmp}")
+                    # print("====================================")
+                    dataout_reg[31:24] = mem[addr_tmp]
+                    dataout_reg[23:16] = mem[addr_tmp + 1]
+                    dataout_reg[15:8] = mem[addr_tmp + 2]
+                    dataout_reg[7:0] = mem[addr_tmp + 3]
+
+                    # First SEND_DATA iteration copied here
+                    tmp = dut.input_PAD.get()
+                    tmp[1] = dataout_reg[index]
+                    dut.input_PAD.set(tmp)
+                    if index == 0:
+                        state = "END"
+                    else:
+                        index = index - 1
+
+                else:
+                    state = "RECV_DATA"
+                    index = 7
+            else:
+                index = index - 1
+
+        elif state == "WAITING":
+            state = "SEND_DATA"
+            addr_tmp = addr_reg[23:0].integer
+            dataout_reg[31:24] = mem[addr_tmp]
+            dataout_reg[23:16] = mem[addr_tmp + 1]
+            dataout_reg[15:8] = mem[addr_tmp + 2]
+            dataout_reg[7:0] = mem[addr_tmp + 3]
+
+        elif state == "RECV_DATA":
+            datain_reg[index] = si
+            if index == 0:
+                mem[addr_reg.integer] = datain_reg
+                print("============================")
+                print(f"Wrote {datain_reg.integer} to {addr_reg.integer}")
+                index = 7
+                addr_reg = LogicArray(addr_reg.integer + 1, Range(23, "downto", 0))
+            else:
+                index = index - 1
+
+        elif state == "SEND_DATA":
+            tmp = dut.input_PAD.get()
+            tmp[1] = dataout_reg[index]
+            dut.input_PAD.set(tmp)
+            if index == 0:
+                state = "END"
+            else:
+                index = index - 1
+
+        elif state == "END":
+            pass
+
 
 @cocotb.test()
 async def test_counter(dut):
@@ -67,13 +191,16 @@ async def test_counter(dut):
     logger.info("Running the test...")
 
     # Wait for some time...
-    await ClockCycles(dut.clk_PAD, 10)
-
-    # Start the counter by setting all inputs to 1
-    dut.input_PAD.value = -1
+    for i in range(10):
+        await ClockCycles(dut.clk_PAD, 1)
+        if dut.bidir_PAD.get()[1] == 1:
+            do_spi(dut)
 
     # Wait for a number of clock cycles
-    await ClockCycles(dut.clk_PAD, 100)
+    for i in range(3000):
+        await ClockCycles(dut.clk_PAD, 1)
+        if dut.bidir_PAD.get()[1] == 1:
+            do_spi(dut)
 
     # Check the end result of the counter
     assert dut.bidir_PAD.value == 100 - 1
@@ -99,8 +226,25 @@ def chip_top_runner():
 
         defines = {"FUNCTIONAL": True, "USE_POWER_PINS": True}
     else:
+        sources.append(proj_path / "../src/constants.sv")
         sources.append(proj_path / "../src/chip_top.sv")
         sources.append(proj_path / "../src/chip_core.sv")
+        sources.append(proj_path / "../src/cpu.sv")
+        sources.append(proj_path / "../src/alu.sv")
+        sources.append(proj_path / "../src/lo_gen.v")
+        sources.append(proj_path / "../src/csr.sv")
+        sources.append(proj_path / "../src/memory.sv")
+        sources.append(proj_path / "../src/dsmod.v")
+        sources.append(proj_path / "../src/regs.sv")
+        sources.append(proj_path / "../src/freq_generator.sv")
+        sources.append(proj_path / "../src/spi_master.sv")
+        sources.append(proj_path / "../src/control.sv")
+        sources.append(proj_path / "../src/i2c_master.sv")
+        sources.append(proj_path / "../src/cordic_iterative.v")
+        sources.append(proj_path / "../src/imm_gen.sv")
+        sources.append(proj_path / "../src/uart_tx.v")
+        sources.append(proj_path / "../src/cordic_slice.v")
+        sources.append(proj_path / "../src/instructioncounter.sv")
 
     sources += [
         # IO pad models
@@ -108,7 +252,7 @@ def chip_top_runner():
         Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_io/verilog/gf180mcu_ws_io.v",
         
         # SRAM macros
-        Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_ip_sram/verilog/gf180mcu_fd_ip_sram__sram512x8m8wm1.v",
+        Path(pdk_root) / pdk / "libs.ref/gf180mcu_fd_ip_sram/verilog/gf180mcu_fd_ip_sram__sram64x8m8wm1.v",
         
         # Custom IP
         proj_path / "../ip/gf180mcu_ws_ip__id/vh/gf180mcu_ws_ip__id.v",
@@ -120,6 +264,7 @@ def chip_top_runner():
     if sim == "icarus":
         # For debugging
         # build_args = ["-Winfloop", "-pfileline=1"]
+        build_args = ["-DSIM"]
         pass
 
     if sim == "verilator":
