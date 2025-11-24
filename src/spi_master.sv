@@ -30,20 +30,20 @@ module spi_master (
     SEND_DATA,
     VALID
   } states_t;
-  states_t       state;
+  states_t state;
 
   // The mode is stored internally because we do not want it to change
   // while talking to the SRAM. The initial command determines the behavior
   // of the SRAM. Changing read/write during operation will corrupt the state
-  logic          write_reg;
+  logic    write_reg;
 
-  logic    [7:0] SPI_WRITE_CMD = 8'h02;
-  logic    [7:0] SPI_READ_CMD = 8'h03;
+  localparam [7:0] SPI_WRITE_CMD = 8'h02;
+  localparam [7:0] SPI_READ_CMD = 8'h03;
 
-  byte           index;
-  byte           end_index;
+  byte  index;
+  byte  end_index;
 
-  logic          sclk_tmp;
+  logic sclk_tmp;
 
   // State transistions (delta)
   always_ff @(posedge clk) begin
@@ -54,6 +54,7 @@ module spi_master (
       state <= RESET;
       ce <= 1'b0;
       sclk_tmp <= 1'b0;
+      index <= 7;
     end else if (req == 1) begin  // active low
       state <= RESET;
       ce <= 1'b0;

@@ -61,6 +61,8 @@ module cpu #(
   logic intr_timer;
   logic load_access_fault;
   logic [2:0] funct3;
+  wire scl, sda, _unused;
+  assign _unused = &{sda, scl};
   memory #(
       .CLK_FREQ(CLK_FREQ),
       .BAUD(BAUD)
