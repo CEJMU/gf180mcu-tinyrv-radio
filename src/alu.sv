@@ -11,7 +11,6 @@ module alu (
   `include "constants.sv"
 `endif
 
-
   logic [6:0] opcode;
   logic [6:0] funct7;
   logic [2:0] funct3;

@@ -12,7 +12,10 @@
 // 0x1000009: mtimecmph
 // 0x1000010 - end: load_access_fault
 
-module memory (
+module memory #(
+    parameter int CLK_FREQ,
+    parameter int BAUD
+) (
     input logic clk,
     input logic reset,
     input logic ce,     // active low
@@ -70,7 +73,7 @@ module memory (
   localparam int UART_TX_ADDR = 32'h1000002;
 
   localparam int I2C_DEVICE_ADDR = 32'h1000003;
-  localparam int I2C_DATA_ADDR = 32'h1000004; // is 4-byte aligned
+  localparam int I2C_DATA_ADDR = 32'h1000004;  // is 4-byte aligned
   localparam int I2C_MASK_ADDR = 32'h1000005;
 
   // ===== Alignment required =====
@@ -104,8 +107,8 @@ module memory (
   states_t        state = IDLE;
   target_t        target = SRAM;
 
-  logic    [63:0] mtime = 0;
-  logic    [63:0] mtimecmp = 0;
+  logic    [63:0] mtime;
+  logic    [63:0] mtimecmp;
 
   logic    [31:0] addr_reg;
   logic    [31:0] datain_reg;
@@ -124,9 +127,11 @@ module memory (
   // TODO: Rewrite as seperate states like READING_AWAIT, ...
   logic sclk_flag;
 
+  logic sram_req;
   spi_master sram_master (
       .clk(clk),
-      .reset(sram_reset),
+      .reset(reset),
+      .req(sram_req),
       .si(si),
       .so(so),
       .sclk(sclk),
@@ -155,11 +160,14 @@ module memory (
   );
 
   logic uart_busy;
-  logic uart_en = 0;
+  logic uart_en;
 
-  uart_tx uart_transmitter (
+  uart_tx #(
+      .CLK_FREQ(CLK_FREQ),
+      .BAUD(BAUD)
+  ) uart_transmitter (
       .clk(clk),
-      .resetn(~reset),
+      .resetn(reset),
       .uart_txd(tx),
       .uart_tx_busy(uart_busy),
       .uart_tx_en(uart_en),
@@ -192,12 +200,13 @@ module memory (
   always_ff @(posedge clk) begin
     mtime <= mtime + 1;
 
-    if (reset) begin
+    if (reset == 0) begin
       state <= IDLE;
       uart_en <= 0;
       mtime <= 0;
       mtimecmp <= 0;
       freq_status[1:0] <= 2'b00;
+      gpio_out <= 8'd0;
     end else if (ce) begin
       state   <= IDLE;
       uart_en <= 0;
@@ -355,7 +364,7 @@ module memory (
   assign master_reset = (state == READING || state == WRITING) ? 1'b0 : 1'b1;
 
   assign i2c_reset = (target == I2C) ? master_reset : 1;
-  assign sram_reset = (target == SRAM) ? master_reset : 1;
+  assign sram_req = (target == SRAM) ? master_reset : 1;
 
   assign intr_timer = ($unsigned(mtime) >= $unsigned(mtimecmp)) ? 1 : 0;
   assign load_access_fault = (state == FAULT) ? 1 : 0;

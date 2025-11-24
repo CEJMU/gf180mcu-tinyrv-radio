@@ -1,8 +1,7 @@
-module cpu (
-`ifdef USE_POWER_PINS
-    inout wire  VDD,
-    inout wire  VSS,
-`endif
+module cpu #(
+    parameter int CLK_FREQ = 12_000_000,
+    parameter int BAUD = 115_200
+) (
     input logic clk,
     input logic reset,    // active low due to pico-ice button
     input logic intr_ext,
@@ -52,25 +51,22 @@ module cpu (
   logic        regwrite;
   logic [31:0] rd_alu, rs1, rs2, alu_comb;
 
-  // NOTE: Inverting reset on pico-ice board because the button is active low
-  logic rst_h;
-  assign rst_h = ~reset;
-
   always_ff @(posedge clk) begin
     rd_alu <= alu_comb;
 
     if (fetchflag) iword <= mem_dataout;
-    if (rst_h) iword <= 0;
+    if (reset == 0) iword <= 0;
   end
 
   logic intr_timer;
   logic load_access_fault;
   logic [2:0] funct3;
-   wire       scl, sda;
-   wire       _unused = &{scl, sda};
-  memory memory_i (
+  memory #(
+      .CLK_FREQ(CLK_FREQ),
+      .BAUD(BAUD)
+  ) memory_i (
       .clk(clk),
-      .reset(rst_h),
+      .reset(reset),
       .ce(mem_ce),
       .funct3(funct3),
       .addr(mem_addr),
@@ -118,7 +114,7 @@ module cpu (
   logic [2:0] exceptions;
   control control_i (
       .clk(clk),
-      .reset(rst_h),
+      .reset(reset),
       .iword(iword),
       .mem_busy(mem_busy),
       .mem_valid(mem_valid),
@@ -141,7 +137,7 @@ module cpu (
   logic [31:0] csr_dataout;
   csr csr_i (
       .clk(clk),
-      .reset(rst_h),
+      .reset(reset),
       .intr_timer(intr_timer),
       .intr_ext(intr_ext),
       .exceptions(exceptions),
@@ -160,7 +156,7 @@ module cpu (
   logic pc_misaligned;
   instructioncounter inst_i (
       .clk(clk),
-      .reset(rst_h),
+      .reset(reset),
       .pcflag(pcflag),
       .interrupt(jump_to_isr),
       .jump(jump),
@@ -209,12 +205,8 @@ module cpu (
   end
 
   regs regs (
-`ifdef USE_POWER_PINS
-      .VDD(VDD),
-      .VSS(VSS),
-`endif
       .clk(clk),
-      .reset(rst_h),
+      .reset(reset),
       .regwrite(wbflag),
       .rs1adr(iword[18:15]),
       .rs2adr(iword[23:20]),

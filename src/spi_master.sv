@@ -1,6 +1,7 @@
 module spi_master (
     input logic clk,
-    input logic reset, // reset should be held high if not in use
+    input logic reset,  // reset should be held high if not in use
+    input logic req,
 
     input  logic so,
     output logic si,
@@ -17,8 +18,6 @@ module spi_master (
     output logic valid
 );
 
-  initial ce = 1'b0;
-
   // The state machine according to the SRAM specifiation is the following:
   // Write: SEND_COMMAND, SEND_ADDR, SEND_DATA
   // Read: SEND_COMMAND, SEND_ADDR, WAITING (1 sclk cycle), RECV_DATA
@@ -31,7 +30,7 @@ module spi_master (
     SEND_DATA,
     VALID
   } states_t;
-  states_t       state = RESET;
+  states_t       state;
 
   // The mode is stored internally because we do not want it to change
   // while talking to the SRAM. The initial command determines the behavior
@@ -44,17 +43,21 @@ module spi_master (
   byte           index;
   byte           end_index;
 
-  logic          sclk_tmp = 1'b0;
+  logic          sclk_tmp;
 
   // State transistions (delta)
   always_ff @(posedge clk) begin
     sclk_tmp <= !sclk_tmp;  // Generating sclk for sram
 
-    if (reset == 1) begin
+    if (reset == 0) begin
+      write_reg <= 0;
+      state <= RESET;
+      ce <= 1'b0;
+      sclk_tmp <= 1'b0;
+    end else if (req == 1) begin  // active low
       state <= RESET;
       ce <= 1'b0;
     end else if (sclk_tmp == 0) begin  // == posedge of sclk (we set it to 1 in the same cycle)
-
       case (state)
         RESET: begin
           write_reg <= write;
@@ -101,7 +104,11 @@ module spi_master (
   end
 
   always_ff @(posedge clk) begin
-    if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
+    if (reset == 0) begin
+      data_out <= 32'd0;
+      si <= 1;
+    end
+    else if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
       case (state)
         SEND_COMMAND: si <= (write_reg) ? SPI_WRITE_CMD[index] : SPI_READ_CMD[index];
 

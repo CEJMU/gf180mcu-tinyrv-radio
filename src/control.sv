@@ -87,7 +87,7 @@ module control (
   states_t state_d, state_q;
 
   always_ff @(posedge clk) begin
-    if (reset) state_q <= rst;
+    if (reset == 0) state_q <= rst;
     else state_q <= state_d;
   end
 

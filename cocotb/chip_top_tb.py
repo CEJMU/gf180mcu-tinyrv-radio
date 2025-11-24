@@ -29,12 +29,13 @@ async def set_defaults(dut):
     #     mem.append(LogicArray(random.randint(0, 255), Range(7, "downto", 0)))
 
     lines = ()
-    with open("/home/jonathan/Projekte/TinyRV-Radio/asm/misc/fib.txt", "r") as f:
+    with open("../fib.txt", "r") as f:
         lines = f.readlines()
 
     for i, line in enumerate(lines):
         mem[i] = LogicArray(int(line, base=16), Range(7, "downto", 0))
 
+    print(mem)
     dut.input_PAD.value = 0
 
 
@@ -93,7 +94,6 @@ def do_spi(dut):
     si = dut.bidir_PAD.get()[0]
 
     if dut.bidir_PAD.get()[2] == 0:
-        # print("IDLE")
         state = "IDLE"
         index = 7
     else:
@@ -189,12 +189,6 @@ async def test_counter(dut):
     await start_up(dut)
 
     logger.info("Running the test...")
-
-    # Wait for some time...
-    for i in range(10):
-        await ClockCycles(dut.clk_PAD, 1)
-        if dut.bidir_PAD.get()[1] == 1:
-            do_spi(dut)
 
     # Wait for a number of clock cycles
     for i in range(30000):

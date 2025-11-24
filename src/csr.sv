@@ -27,12 +27,12 @@ module csr (
   localparam byte TIMER = 7;
   localparam byte EXTERNAL = 11;
 
-  logic [31:0] mstatus = 0;  // 0x300
-  logic [31:0] mie = 0;  // 0x304
-  logic [31:0] mtvec = 0;  // 0x305
-  logic [31:0] mepc = 0;  // 0x341
-  logic [31:0] mcause = 0;  // 0x342
-  logic [31:0] mip = 0;  // 0x344
+  logic [31:0] mstatus;  // 0x300
+  logic [31:0] mie;  // 0x304
+  logic [31:0] mtvec;  // 0x305
+  logic [31:0] mepc;  // 0x341
+  logic [31:0] mcause;  // 0x342
+  logic [31:0] mip;  // 0x344
 
   assign timer_interrupt = mstatus[3] && mie[TIMER] && mip[TIMER];
   assign external_interrupt = mstatus[3] && mie[EXTERNAL] && mip[EXTERNAL];
@@ -71,10 +71,13 @@ module csr (
     else if (exceptions[0]) mcause <= {1'b0, 31'd0};  // PC misaligned
     else if (exceptions[2]) mcause <= {1'b0, 31'd5};  // load access fault
 
-    if (reset) begin
-      mstatus[3] <= 0;  // MIE = 0
+    if (reset == 0) begin
+      mstatus <= 32'd0;  // MIE = 0
+      mie <= 32'd0;
       mtvec <= {30'b0, 2'd1};
-      mip <= 0;
+      mepc <= 32'd0;
+      mcause <= 32'd0;
+      mip <= 32'd0;
     end
   end
 

@@ -1,8 +1,4 @@
 module regs (
-`ifdef USE_POWER_PINS
-    inout wire  VDD,
-    inout wire  VSS,
-`endif
     input logic clk,
     input logic reset,
 
@@ -21,11 +17,8 @@ module regs (
   typedef logic [31:0] registers_t [16];
   registers_t registers;
 
-  // Make sure x0 is always zero
-  initial registers[0] = 0;
-
   always_ff @(posedge clk) begin
-      if (reset) begin
+      if (reset == 0) begin
           registers[0] <= 0;
 
           rs1 <= 0;
