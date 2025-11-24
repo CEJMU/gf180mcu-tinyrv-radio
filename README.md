@@ -1,8 +1,14 @@
-# gf180mcu Project Template
+# gf180mcu TinyRV Radio project by JMU Würzburg and JKU Linz
 
-Project template for wafer.space MPW runs using the gf180mcu PDK.
+## Project structure
+- rtl: Verilog/SystemVerilog sources and testbench
+- asm: Assembly toolchain with some example programs taken from the JMU embedded processor lab
+- c_toolchain: gcc based toolchain for developing programs in C. Uses the rv32e target and a small [printf](https://github.com/mpaland/printf) library
+- cocotb: Testbench used for the librelane flow. Simulates the SPI memory
+- librelane: Main configs for the librelane flow
 
-## Prerequisites
+## PDK Template documentation
+### Prerequisites
 
 We use a custom fork of the [gf180mcuD PDK variant](https://github.com/wafer-space/gf180mcu) until all changes have been upstreamed.
 
@@ -10,7 +16,7 @@ To clone the latest PDK version, simply run `make clone-pdk`.
 
 In the next step, install LibreLane by following the Nix-based installation instructions: https://librelane.readthedocs.io/en/latest/installation/nix_installation/index.html
 
-## Implement the Design
+### Implement the Design
 
 This repository contains a Nix flake that provides a shell with the [`leo/gf180mcu`](https://github.com/librelane/librelane/tree/leo/gf180mcu) branch of LibreLane.
 
@@ -25,7 +31,7 @@ With this shell enabled, run the implementation:
 make librelane
 ```
 
-## View the Design
+### View the Design
 
 After completion, you can view the design using the OpenROAD GUI:
 
@@ -39,7 +45,7 @@ Or using KLayout:
 make librelane-klayout
 ```
 
-## Copying the Design to the Final Folder
+### Copying the Design to the Final Folder
 
 To copy your latest run to the `final/` folder in the root directory of the repository, run the following command:
 
@@ -49,7 +55,7 @@ make copy-final
 
 This will only work if the last run was completed without errors.
 
-## Verification and Simulation
+### Verification and Simulation
 
 We use [cocotb](https://www.cocotb.org/), a Python-based testbench environment, for the verification of the chip.
 The underlying simulator is Icarus Verilog (https://github.com/steveicarus/iverilog).
@@ -78,7 +84,7 @@ make sim-view
 
 You can now update the testbench according to your design.
 
-## Implementing Your Own Design
+### Implementing Your Own Design
 
 The source files for this template can be found in the `src/` directory. `chip_top.sv` defines the top-level ports and instantiates `chip_core`, chip ID (QR code) and the wafer.space logo. To allow for the default bonding setup, do not change the number of pads in order to keep the original bondpad positions. To be compatible with the default breakout PCB, do not change any of the power or ground pads. However, you can change the type of the signal pads, e.g. to bidirectional, input-only or e.g. analog pads. The template provides the `NUM_INPUT` and `NUM_BIDIR` parameters for this purpose.
 
@@ -89,6 +95,6 @@ To implement your own design, simply edit `chip_core.sv`. The `chip_core` module
 > [!NOTE]
 > For more comprehensive SystemVerilog support, enable the `USE_SLANG` variable in the LibreLane configuration.
 
-## Precheck
+### Precheck
 
 To check whether your design is suitable for manufacturing, run the [gf180mcu-precheck](https://github.com/wafer-space/gf180mcu-precheck) with your layout.

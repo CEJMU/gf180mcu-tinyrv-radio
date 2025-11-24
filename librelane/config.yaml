@@ -26,25 +26,25 @@ meta:
 
 DESIGN_NAME: chip_top
 VERILOG_FILES:
-- dir::../src/chip_top.sv
-- dir::../src/chip_core.sv
-- dir::../src/cpu.sv
-- dir::../src/alu.sv
-- dir::../src/lo_gen.v
-- dir::../src/csr.sv
-- dir::../src/memory.sv
-- dir::../src/dsmod.v
-- dir::../src/regs.sv
-- dir::../src/constants.sv
-- dir::../src/freq_generator.sv
-- dir::../src/spi_master.sv
-- dir::../src/control.sv
-- dir::../src/i2c_master.sv
-- dir::../src/cordic_iterative.v
-- dir::../src/imm_gen.sv
-- dir::../src/uart_tx.v
-- dir::../src/cordic_slice.v
-- dir::../src/instructioncounter.sv
+- dir::../rtl/src/chip_top.sv
+- dir::../rtl/src/chip_core.sv
+- dir::../rtl/src/cpu.sv
+- dir::../rtl/src/alu.sv
+- dir::../rtl/src/lo_gen.v
+- dir::../rtl/src/csr.sv
+- dir::../rtl/src/memory.sv
+- dir::../rtl/src/dsmod.v
+- dir::../rtl/src/regs.sv
+- dir::../rtl/src/constants.sv
+- dir::../rtl/src/freq_generator.sv
+- dir::../rtl/src/spi_master.sv
+- dir::../rtl/src/control.sv
+- dir::../rtl/src/i2c_master.sv
+- dir::../rtl/src/cordic_iterative.v
+- dir::../rtl/src/imm_gen.sv
+- dir::../rtl/src/uart_tx.v
+- dir::../rtl/src/cordic_slice.v
+- dir::../rtl/src/instructioncounter.sv
 
 # Enable plugin for better SystemVerilog support
 # USE_SLANG: True
