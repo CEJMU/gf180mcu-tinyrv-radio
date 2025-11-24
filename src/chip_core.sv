@@ -50,10 +50,6 @@ module chip_core #(
     assign _unused = &bidir_in;
 
    cpu cpu (
-    `ifdef USE_POWER_PINS
-    .VDD(VDD),
-    .VSS(VSS),
-    `endif
         .clk(clk),
         .reset(rst_n),
         .intr_ext(input_in[0]),

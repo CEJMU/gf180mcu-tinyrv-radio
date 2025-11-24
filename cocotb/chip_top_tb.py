@@ -78,6 +78,18 @@ addr_reg = LogicArray(0, Range(23, "downto", 0))
 datain_reg = LogicArray(0, Range(7, "downto", 0))
 dataout_reg = LogicArray(0, Range(31, "downto", 0))
 index = 0
+mem_pattern = []
+mem_pattern_correct = [
+    (160, 2), (161, 0), (162, 0), (163, 0),
+    (164, 3), (165, 0), (166, 0), (167, 0),
+    (168, 5), (169, 0), (170, 0), (171, 0),
+    (172, 8), (173, 0), (174, 0), (175, 0),
+    (176, 13), (177, 0), (178, 0), (179, 0),
+    (180, 21), (181, 0), (182, 0), (183, 0),
+    (184, 34), (185, 0), (186, 0), (187, 0),
+    (188, 55), (189, 0), (190, 0), (191, 0),
+    (192, 89), (193, 0), (194, 0), (195, 0),
+]
 
 
 def do_spi(dut):
@@ -90,6 +102,7 @@ def do_spi(dut):
     global datain_reg
     global dataout_reg
     global index
+    global mem_pattern
 
     si = dut.bidir_PAD.get()[0]
 
@@ -158,6 +171,7 @@ def do_spi(dut):
                 mem[addr_reg.integer] = datain_reg
                 print("============================")
                 print(f"Wrote {datain_reg.integer} to {addr_reg.integer}")
+                mem_pattern.append((addr_reg.integer, datain_reg.integer))
                 index = 7
                 addr_reg = LogicArray(addr_reg.integer + 1, Range(23, "downto", 0))
             else:
@@ -178,6 +192,8 @@ def do_spi(dut):
 
 @cocotb.test()
 async def test_counter(dut):
+    global mem_pattern
+    global mem_pattern_correct
     """Run the counter test"""
 
     # Create a logger for this testbench
@@ -197,7 +213,7 @@ async def test_counter(dut):
             do_spi(dut)
 
     # Check the end result of the counter
-    assert dut.bidir_PAD.value == 100 - 1
+    assert mem_pattern == mem_pattern_correct
 
     logger.info("Done!")
 
