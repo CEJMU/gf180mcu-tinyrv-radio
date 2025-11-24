@@ -197,7 +197,7 @@ async def test_counter(dut):
             do_spi(dut)
 
     # Wait for a number of clock cycles
-    for i in range(3000):
+    for i in range(30000):
         await ClockCycles(dut.clk_PAD, 1)
         if dut.bidir_PAD.get()[1] == 1:
             do_spi(dut)

@@ -17,9 +17,7 @@ module control (
     input logic [2:0] exceptions,
     output logic jump_to_isr,
     output logic mret,
-    output logic csr_write,
-    input logic reg_busy,
-    output logic reg_enable
+    output logic csr_write
 );
 
 `ifndef SIM
@@ -78,13 +76,10 @@ module control (
     rst,
     fetch_await,
     fetch,
-    decode_await,
     decode,
     execute,
     memory_await,
     memory,
-    write_rd_await,
-    write_rd,
     writeback,
     interrupt
   } states_t;
@@ -109,11 +104,10 @@ module control (
         else if (load_access_fault) state_d = interrupt;
         else if (mem_busy) state_d = fetch;
       end
-      fetch: if (~mem_busy) state_d = decode_await;
+      fetch: if (~mem_busy) state_d = decode;
 
       // ID
-      decode_await: if (reg_busy) state_d = decode;
-      decode: if (~reg_busy) state_d = execute;
+      decode: state_d = execute;
 
       // EX
       execute: begin
@@ -121,10 +115,7 @@ module control (
           state_d = interrupt;
         end else if (mem_phase == 1) begin
           state_d = memory_await;
-        end else begin
-          if (reg_write) state_d = write_rd_await;
-          else state_d = writeback;
-        end
+        end else state_d = writeback;
       end
 
       // MEM
@@ -132,22 +123,7 @@ module control (
         if (load_access_fault) state_d = interrupt;
         else if (mem_busy) state_d = memory;
       end
-      memory:
-      if (~mem_busy) begin
-        if (reg_write) begin
-          state_d = write_rd_await;
-        end else begin
-          state_d = writeback;
-        end
-      end
-
-
-      write_rd_await: if (reg_busy) state_d = write_rd;
-      write_rd: begin
-        if (~reg_busy) begin
-          state_d = writeback;
-        end
-      end
+      memory: if (~mem_busy) state_d = writeback;
 
       // WB
       writeback: begin
@@ -175,30 +151,18 @@ module control (
     jump_to_isr = 0;
     mret = 0;
     csr_write = 0;
-    reg_enable = 0;
 
     case (state_q)
       fetch: if (mem_valid) fetchflag = 1;
 
       memory, memory_await: memflag = 1;
 
-      decode_await: reg_enable = 1;
-
       writeback: begin
         pcflag = 1;
+        if (reg_write) wbflag = 1;
         if ({funct7, funct3, opcode} == {FUNCT7_MRET, FUNCT3_MRET, OP_MRET}) mret = 1;
         if ({funct3, opcode} == {FUNCT3_CSRW, OP_CSR}) csr_write = 1;
       end
-
-      write_rd_await: begin
-        reg_enable = 1;
-        wbflag = 1;
-      end
-
-      write_rd: begin
-        wbflag = 1;
-      end
-
 
       interrupt: begin
         jump_to_isr = 1;

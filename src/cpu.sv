@@ -116,8 +116,6 @@ module cpu (
   logic       interrupt_pending;
   logic       csr_write;
   logic [2:0] exceptions;
-  logic       reg_enable;
-  logic       reg_busy;
   control control_i (
       .clk(clk),
       .reset(rst_h),
@@ -135,9 +133,7 @@ module cpu (
       .exceptions(exceptions),
       .jump_to_isr(jump_to_isr),
       .mret(mret),
-      .csr_write(csr_write),
-      .reg_enable(reg_enable),
-      .reg_busy(reg_busy)
+      .csr_write(csr_write)
   );
 
   logic [15:0] isr_return;
@@ -225,9 +221,7 @@ module cpu (
       .rdadr(iword[10:7]),
       .rd(rd),
       .rs1(rs1),
-      .rs2(rs2),
-      .enable(reg_enable),
-      .busy(reg_busy)
+      .rs2(rs2)
   );
 
 endmodule  // cpu
