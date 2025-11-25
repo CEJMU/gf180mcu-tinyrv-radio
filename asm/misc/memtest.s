@@ -1,19 +1,23 @@
 .section .text._start
 .globl _start
 _start:
-    li x1, 160
-    li x2, 65535
-    slli x2, x2, 1
+    li x1, 0x1000002
+    li x5, 97
+    sw x5, 0(x1)
 
-    // lw test
-    sw x2, 0(x1)
-    lw x3, 0(x1)
-    lb x4, 0(x1)
-    lbu x5, 0(x1)
-    lh x6, 0(x1)
-    lhu x7, 0(x1)
+    li x2, 0b100000000000000100000000
+    li x3, 0b000000000000000100000000
+    li x4, 0xDEADBEEF
 
-    sb x2, 140(x0)
-    sh x2, 145(x0)
+    sw x4, 0(x2)
+    lw x5, 0(x3)
+
+    sw x5, 0(x1)
+    srli x5, x5, 8
+    sw x5, 0(x1)
+    srli x5, x5, 8
+    sw x5, 0(x1)
+    srli x5, x5, 8
+    sw x5, 0(x1)
 loop:
     j loop

@@ -1,4 +1,4 @@
-FILE = fib
-OBJS = fib.o
+FILE = memtest
+OBJS = memtest.o
 
 include ../Makefile.inc

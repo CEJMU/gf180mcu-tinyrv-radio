@@ -3,7 +3,7 @@ TARGET ?= synth_ice40
 
 FILE = cpu
 MODULES_SYNTH = src/uart_tx.v src/i2c_master.sv src/spi_master.sv src/dsmod.v src/cordic_slice.v src/cordic_iterative.v src/lo_gen.v src/freq_generator.sv src/memory.sv src/regs.sv src/alu.sv src/control.sv src/instructioncounter.sv src/csr.sv src/imm_gen.sv
-MODULES_SIM =  src/constants.sv $(MODULES_SYNTH) src/sram_sim.sv
+MODULES_SIM = $(MODULES_SYNTH) src/sram_sim.sv constants.sv
 
 .PHONY: simulation lint synthesis synthesis_generic visualize visualize_generic pr pr-gui formal gen_bitstream flash_bitstream all clean
 

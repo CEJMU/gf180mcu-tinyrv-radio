@@ -17,7 +17,7 @@ clean:
 # Proper targets
 # ==========================
 %.o: %.s
-	riscv32-unknown-elf-gcc -march=rv32im -o $@ -c $<
+	riscv32-unknown-elf-gcc -march=rv32e -o $@ -c $<
 
 $(FILE).tmp: $(OBJS)
 	riscv32-unknown-elf-ld -T ../hwp_tinyrv2.ld -o $(FILE).tmp $(OBJS)

@@ -23,9 +23,7 @@ addi x15, zero, 0
 la gp, __global_pointer$
 
 /* set stack pointer */
-.equ STACK_START, 0xFFFFFF
-lui sp, %hi(STACK_START)
-addi sp, sp, %lo(STACK_START)
+la sp, __stacktop
 
 /* push zeros on the stack for argc and argv */
 /* (stack is aligned to 16 bytes in riscv calling convention) */

@@ -64,27 +64,29 @@ module memory #(
   `include "constants.sv"
 `endif
 
-  localparam int SRAM_LOW_ADDR = 32'h0000000;
-  localparam int SRAM_HIGH_ADDR = 32'h0FFFFFF;
+  // verilog_format: off
+  localparam int SRAM_LOW_ADDR =    32'h00000000;
+  localparam int SRAM_HIGH_ADDR =   32'h007FFFFF;
 
-  localparam int GPIO_OUT_ADDR = 32'h1000000;
-  localparam int GPIO_IN_ADDR = 32'h1000001;
+  localparam int GPIO_OUT_ADDR =    32'h00800000;
+  localparam int GPIO_IN_ADDR =     32'h00800001;
 
-  localparam int UART_TX_ADDR = 32'h1000002;
+  localparam int UART_TX_ADDR =     32'h00800002;
 
-  localparam int I2C_DEVICE_ADDR = 32'h1000003;
-  localparam int I2C_DATA_ADDR = 32'h1000004;  // is 4-byte aligned
-  localparam int I2C_MASK_ADDR = 32'h1000005;
+  localparam int I2C_DEVICE_ADDR =  32'h00800003;
+  localparam int I2C_DATA_ADDR =    32'h00800004;  // is 4-byte aligned
+  localparam int I2C_MASK_ADDR =    32'h00800005;
 
   // ===== Alignment required =====
-  localparam int MTIME_ADDR = 32'h1000008;
-  localparam int MTIMEH_ADDR = 32'h100000C;
-  localparam int MTIMECMP_ADDR = 32'h1000010;
-  localparam int MTIMECMPH_ADDR = 32'h1000014;
+  localparam int MTIME_ADDR =       32'h00800008;
+  localparam int MTIMEH_ADDR =      32'h0080000C;
+  localparam int MTIMECMP_ADDR =    32'h00800010;
+  localparam int MTIMECMPH_ADDR =   32'h00800014;
 
-  localparam int FREQ_STATUS_ADDR = 32'h1000018;
-  localparam int FREQ_OSR_FC_ADDR = 32'h100001C;
-  localparam int FREQ_LO_DIV_ADDR = 32'h1000020;
+  localparam int FREQ_STATUS_ADDR = 32'h00800018;
+  localparam int FREQ_OSR_FC_ADDR = 32'h0080001C;
+  localparam int FREQ_LO_DIV_ADDR = 32'h00800020;
+// verilog_format: on
 
   typedef enum {
     IDLE,
@@ -136,7 +138,7 @@ module memory #(
       .so(so),
       .sclk(sclk),
       .ce(sram_ce),
-      .addr(addr_reg),
+      .addr(addr_reg), // NOTE: the SRAM is 23 bit wide but uses 24 bit addresses
       .byte_mask(funct3[1:0]),
       .data_in(datain_reg),
       .data_out(sram_dataout),

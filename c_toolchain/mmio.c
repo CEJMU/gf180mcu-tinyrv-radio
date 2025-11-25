@@ -1,6 +1,6 @@
 #include "mmio.h"
 
-volatile char *const GPIO_OUT = (char *)0x1000000;
+volatile char *const GPIO_OUT = (char *)0x0800000;
 volatile char *const GPIO_IN = (char *)(GPIO_OUT + 1);
 
 volatile char *const UART_TX = (char *)(GPIO_OUT + 2);
