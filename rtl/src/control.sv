@@ -21,7 +21,11 @@ module control (
 );
 
 `ifndef SIM
-  `include "constants.sv"
+  `ifdef FPGA
+    `include "constants.sv"
+  `else
+    `include "rtl/constants.sv"
+  `endif
 `endif
 
   // NOTE for docs:

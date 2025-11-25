@@ -6,3 +6,9 @@ tmp/
 *.vcd
 /test_pre
 /.envrc
+*.asc
+*.bin
+*.json
+*.pdf
+*.png
+*.svg

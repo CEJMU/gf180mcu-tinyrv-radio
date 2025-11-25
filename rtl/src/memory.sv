@@ -61,7 +61,11 @@ module memory #(
 );
 
 `ifndef SIM
-  `include "constants.sv"
+  `ifdef FPGA
+    `include "constants.sv"
+  `else
+    `include "rtl/constants.sv"
+  `endif
 `endif
 
   // verilog_format: off

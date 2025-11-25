@@ -4,7 +4,11 @@ module imm_gen (
 );
 
 `ifndef SIM
-  `include "constants.sv"
+  `ifdef FPGA
+    `include "constants.sv"
+  `else
+    `include "rtl/constants.sv"
+  `endif
 `endif
 
     logic [6:0] opcode;

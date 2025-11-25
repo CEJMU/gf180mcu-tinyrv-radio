@@ -30,7 +30,11 @@ module cpu #(
 );
 
 `ifndef SIM
-  `include "constants.sv"
+  `ifdef FPGA
+    `include "constants.sv"
+  `else
+    `include "rtl/constants.sv"
+  `endif
 `endif
 
   logic mem_ce, memwrite, mem_busy, mem_valid;

@@ -236,7 +236,7 @@ def chip_top_runner():
 
         defines = {"FUNCTIONAL": True, "USE_POWER_PINS": True}
     else:
-        sources.append(proj_path / "../rtl/src/constants.sv")
+        sources.append(proj_path / "../rtl/constants.sv")
         sources.append(proj_path / "../rtl/src/chip_top.sv")
         sources.append(proj_path / "../rtl/src/chip_core.sv")
         sources.append(proj_path / "../rtl/src/cpu.sv")

@@ -35,7 +35,7 @@ VERILOG_FILES:
 - dir::../rtl/src/memory.sv
 - dir::../rtl/src/dsmod.v
 - dir::../rtl/src/regs.sv
-- dir::../rtl/src/constants.sv
+- dir::../rtl/constants.sv
 - dir::../rtl/src/freq_generator.sv
 - dir::../rtl/src/spi_master.sv
 - dir::../rtl/src/control.sv
