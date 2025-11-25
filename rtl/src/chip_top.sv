@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText: © 2025 Project Template Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+// TODO: I2C pullups direkt hier definieren?
+// TODO: I2C master mal gescheit machen
+// TODO: UART receiver mit interrupts
 `default_nettype none
 
 module chip_top #(
@@ -189,9 +192,9 @@ module chip_top #(
         .bidir_sl   (bidir_CORE2PAD_SL),
         .bidir_ie   (bidir_CORE2PAD_IE),
         .bidir_pu   (bidir_CORE2PAD_PU),
-        .bidir_pd   (bidir_CORE2PAD_PD),
+        .bidir_pd   (bidir_CORE2PAD_PD)
         
-        .analog     (analog_PAD)
+        // .analog     (analog_PAD)
     );
     
     // Chip ID - do not remove, necessary for tapeout

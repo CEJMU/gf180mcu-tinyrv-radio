@@ -25,17 +25,15 @@ async def set_defaults(dut):
     global mem
     mem = {}
 
-    # for i in range(2**24):
-    #     mem.append(LogicArray(random.randint(0, 255), Range(7, "downto", 0)))
-
     lines = ()
-    with open("../fib.txt", "r") as f:
+    # with open("../fib.txt", "r") as f:
+    with open("/home/jonathan/Projekte/gf180mcu-tinyrv-radio/c_toolchain/build/demo.txt", "r") as f:
+    # with open("/home/jonathan/Projekte/gf180mcu-tinyrv-radio/asm/misc/i2cce.txt", "r") as f:
         lines = f.readlines()
 
     for i, line in enumerate(lines):
         mem[i] = LogicArray(int(line, base=16), Range(7, "downto", 0))
 
-    print(mem)
     dut.input_PAD.value = 0
 
 
@@ -44,7 +42,7 @@ async def enable_power(dut):
     dut.VSS.value = 0
 
 
-async def start_clock(clock, freq=10):
+async def start_clock(clock, freq=20):
     """Start the clock @ freq MHz"""
     c = Clock(clock, 1 / freq * 1000, "ns")
     cocotb.start_soon(c.start())
@@ -126,14 +124,14 @@ def do_spi(dut):
             addr_reg[index] = si
             if index == 0:
                 index = 31
-                addr_tmp = addr_reg.integer
+                addr_tmp = addr_reg.to_unsigned()
                 # print("====================================")
                 # print(f"Received cmd: {command_reg.integer}")
                 # print("====================================")
 
-                if command_reg.integer == READ_CMD:
+                if command_reg.to_unsigned() == READ_CMD:
                     state = "SEND_DATA"
-                    addr_tmp = addr_reg.integer
+                    addr_tmp = addr_reg[22:0].to_unsigned()
                     # print("====================================")
                     # print(f"Received addr: {addr_tmp}")
                     # print("====================================")
@@ -157,23 +155,23 @@ def do_spi(dut):
             else:
                 index = index - 1
 
-        elif state == "WAITING":
-            state = "SEND_DATA"
-            addr_tmp = addr_reg[23:0].integer
-            dataout_reg[31:24] = mem[addr_tmp]
-            dataout_reg[23:16] = mem[addr_tmp + 1]
-            dataout_reg[15:8] = mem[addr_tmp + 2]
-            dataout_reg[7:0] = mem[addr_tmp + 3]
+        # elif state == "WAITING":
+        #     state = "SEND_DATA"
+        #     addr_tmp = addr_reg[22:0].to_unsigned()
+        #     dataout_reg[31:24] = mem[addr_tmp]
+        #     dataout_reg[23:16] = mem[addr_tmp + 1]
+        #     dataout_reg[15:8] = mem[addr_tmp + 2]
+        #     dataout_reg[7:0] = mem[addr_tmp + 3]
 
         elif state == "RECV_DATA":
             datain_reg[index] = si
             if index == 0:
-                mem[addr_reg.integer] = datain_reg
+                mem[addr_reg.to_unsigned()] = datain_reg.to_unsigned()
                 print("============================")
-                print(f"Wrote {datain_reg.integer} to {addr_reg.integer}")
-                mem_pattern.append((addr_reg.integer, datain_reg.integer))
+                print(f"Wrote {hex(datain_reg.to_unsigned())} to {hex(addr_reg.to_unsigned())}")
+                mem_pattern.append((addr_reg.to_unsigned(), datain_reg.to_unsigned()))
                 index = 7
-                addr_reg = LogicArray(addr_reg.integer + 1, Range(23, "downto", 0))
+                addr_reg = LogicArray(addr_reg.to_unsigned() + 1, Range(23, "downto", 0))
             else:
                 index = index - 1
 
@@ -207,7 +205,7 @@ async def test_counter(dut):
     logger.info("Running the test...")
 
     # Wait for a number of clock cycles
-    for i in range(30000):
+    for i in range(150000):
         await ClockCycles(dut.clk_PAD, 1)
         if dut.bidir_PAD.get()[1] == 1:
             do_spi(dut)
