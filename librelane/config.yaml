@@ -82,8 +82,8 @@ PAD_EAST: [
 
     "bidir\\[14\\].pad",
     "bidir\\[15\\].pad",
-    # "bidir\\[16\\].pad",
-    # "bidir\\[17\\].pad",
+    "bidir\\[16\\].pad",
+    "bidir\\[17\\].pad",
     # "bidir\\[18\\].pad",
     # "bidir\\[19\\].pad",
     
@@ -138,7 +138,7 @@ PAD_WEST: [
     # "inputs\\[9\\].pad",
     # "inputs\\[8\\].pad",
     # "inputs\\[7\\].pad",
-    # "inputs\\[6\\].pad",
+    "inputs\\[6\\].pad",
 
     "dvdd_pads\\[5\\].pad",
     "dvss_pads\\[7\\].pad",

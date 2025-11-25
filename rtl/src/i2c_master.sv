@@ -3,7 +3,9 @@ module i2c_master (
     input logic reset,
 
     // I2C pins
-    inout  logic sda,
+    input  logic sda_i,
+    output logic sda_o,
+    output logic sda_oe,
     output logic scl,
 
     // memory interface
@@ -39,8 +41,7 @@ module i2c_master (
 
   states_t        state = RESET;
 
-  logic           sda_tmp;
-  logic           tristate_en;
+  // logic           sda_tmp;
 
   logic           scl_tmp = 1;
   logic           scl_trigger = 0;
@@ -63,7 +64,7 @@ module i2c_master (
     end else scl_counter <= scl_counter + 1;
 
     if (reset) begin
-        scl_counter <= 31;
+      scl_counter <= 31;
     end
   end
 
@@ -75,10 +76,8 @@ module i2c_master (
       send_cmd <= 1;
       signal_stage <= 3;
     end else if (scl_trigger == 1) begin  // == negedge of scl
-      if (signal_stage == 3)
-        signal_stage <= 0;
-      else
-        signal_stage <= signal_stage + 1;
+      if (signal_stage == 3) signal_stage <= 0;
+      else signal_stage <= signal_stage + 1;
 
       if (signal_stage == 3) begin
         unique case (state)
@@ -98,18 +97,13 @@ module i2c_master (
 
           SEND_CMD: state <= RECV_CMD_ACK;
           RECV_CMD_ACK: begin
-            if (write)
-              state <= SEND_FRAME;
+            if (write) state <= SEND_FRAME;
             else state <= RECV_FRAME;
 
-            if (mask[3] == 1)
-              frame_index <= 3;
-            else if (mask[2] == 1)
-              frame_index <= 2;
-            else if (mask[1] == 1)
-              frame_index <= 1;
-            else
-              frame_index <= 0;
+            if (mask[3] == 1) frame_index <= 3;
+            else if (mask[2] == 1) frame_index <= 2;
+            else if (mask[1] == 1) frame_index <= 1;
+            else frame_index <= 0;
           end
 
           RECV_FRAME: begin
@@ -118,7 +112,7 @@ module i2c_master (
               index <= 7;
             end else index <= index - 1;
 
-            data_out[frame_index*8 + index] <= sda;
+            data_out[frame_index*8+index] <= sda_i;
           end
           SEND_FRAME_ACK: state <= STOP1;
 
@@ -170,54 +164,54 @@ module i2c_master (
   end
 
   always_comb begin
-    tristate_en = 1;
-    sda_tmp = 1;
+    sda_oe = 1;
+    // sda_tmp = 1;
+    sda_o = 1;
     busy = 1;
     scl = 0;
     valid = 0;
 
-    if (signal_stage == 1 || signal_stage == 2)
-      scl = 1;
+    if (signal_stage == 1 || signal_stage == 2) scl = 1;
 
-    frame = data_in[frame_index*8 +: 8];
+    frame = data_in[frame_index*8+:8];
 
     unique case (state)
       // Initial stuff
       START1: begin  // First action of start condition
-        sda_tmp = 0;
-        scl = 1;
+        sda_o = 0;
+        scl   = 1;
       end
       START2: begin  // Second action of start condition
-        sda_tmp = 0;
-        scl = 0;
+        sda_o = 0;
+        scl   = 0;
       end
 
-      SEND_ADDR: sda_tmp = device_addr[index];
-      SEND_CMD:  sda_tmp = ~write;  // 0: write, 1: read
+      SEND_ADDR: sda_o = device_addr[index];
+      SEND_CMD:  sda_o = ~write;  // 0: write, 1: read
       RECV_CMD_ACK: begin
         // ack = sda;
-        tristate_en = 0;
+        sda_oe = 0;
       end
 
       RECV_FRAME: begin
-        tristate_en = 0;
+        sda_oe = 0;
       end
-      SEND_FRAME_ACK: sda_tmp = 1;
+      SEND_FRAME_ACK: sda_o = 1;
 
-      SEND_FRAME: sda_tmp = frame[index];
+      SEND_FRAME: sda_o = frame[index];
       RECV_FRAME_ACK: begin
         // ack = sda;
-        tristate_en = 0;
+        sda_oe = 0;
       end
 
       // Final stuff
       STOP1: begin  // First action of stop condition
-        scl = 1;
-        sda_tmp = 0;
+        scl   = 1;
+        sda_o = 0;
       end
       STOP2: begin  // Second action of stop condition
-        scl = 1;
-        sda_tmp = 1;
+        scl   = 1;
+        sda_o = 1;
       end
 
       RESET, END: begin
@@ -227,6 +221,6 @@ module i2c_master (
     endcase
   end
 
-  assign sda = (tristate_en) ? sda_tmp : 1'bZ;
+  // assign sda = (tristate_en) ? sda_tmp : 1'bZ;
 
 endmodule

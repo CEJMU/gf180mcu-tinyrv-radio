@@ -1,12 +1,12 @@
 .section .text._start
 .globl _start
 _start:
-    li x2, 0x1000004
+    li x2, 0x0800003
     li x5, 60
     sw x5, 0(x2) # Store 60 in device addr
     li x5, 3
-    sw x5, 1(x2) # 3 in byte mask (two LSBs)
-    li x2, 0x1000003
+    sw x5, 2(x2) # 3 in byte mask (two LSBs)
+    li x2, 0x0800004
 
     li x5, 0x000000AE
     sw x5, 0(x2)
@@ -93,12 +93,12 @@ _start:
     sw x5, 0(x2)
 
 
-    li x2, 0x1000004
+    li x2, 0x0800003
     li x5, 60
     sw x5, 0(x2) # Store 60 in device addr
     li x5, 9
-    sw x5, 1(x2) # 9 in byte mask (two LSBs)
-    li x2, 0x1000003
+    sw x5, 2(x2) # 9 in byte mask (two LSBs)
+    li x2, 0x0800004
 
     li x5, 0x000000B0
     sw x5, 0(x2)

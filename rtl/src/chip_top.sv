@@ -9,8 +9,8 @@ module chip_top #(
     parameter NUM_DVSS_PADS = 10,
 
     // Signal pads
-    parameter NUM_INPUT_PADS = 6,
-    parameter NUM_BIDIR_PADS = 16,
+    parameter NUM_INPUT_PADS = 7,
+    parameter NUM_BIDIR_PADS = 18,
     parameter NUM_ANALOG_PADS = 2
     )(
     `ifdef USE_POWER_PINS

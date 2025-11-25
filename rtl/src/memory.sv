@@ -37,7 +37,9 @@ module memory #(
 
     // I2C interface
     output logic scl,
-    inout  logic sda,
+    input  logic sda_i,
+    output logic sda_o,
+    output logic sda_oe,
 
     // UART Interface
     output logic tx,
@@ -61,11 +63,11 @@ module memory #(
 );
 
 `ifndef SIM
-  `ifdef FPGA
-    `include "constants.sv"
-  `else
-    `include "rtl/constants.sv"
-  `endif
+`ifdef FPGA
+  `include "constants.sv"
+`else
+  `include "rtl/constants.sv"
+`endif
 `endif
 
   // verilog_format: off
@@ -142,7 +144,7 @@ module memory #(
       .so(so),
       .sclk(sclk),
       .ce(sram_ce),
-      .addr(addr_reg), // NOTE: the SRAM is 23 bit wide but uses 24 bit addresses
+      .addr(addr_reg),  // NOTE: the SRAM is 23 bit wide but uses 24 bit addresses
       .byte_mask(funct3[1:0]),
       .data_in(datain_reg),
       .data_out(sram_dataout),
@@ -154,7 +156,9 @@ module memory #(
   i2c_master i2c_master (
       .clk(clk),
       .reset(i2c_reset),
-      .sda(sda),
+      .sda_i(sda_i),
+      .sda_o(sda_o),
+      .sda_oe(sda_oe),
       .scl(scl),
       .device_addr(i2c_addr),
       .mask(i2c_mask),

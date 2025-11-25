@@ -11,8 +11,14 @@ module cpu #(
     output logic sclk,
     output logic sram_ce,
 
-    // output logic scl,
-    // inout  logic sda,
+`ifdef FPGA
+    inout  logic sda,
+`else
+    input  logic sda_i,
+    output logic sda_o,
+    output logic sda_oe,
+`endif
+    output logic scl,
 
     output logic tx,
 
@@ -30,11 +36,18 @@ module cpu #(
 );
 
 `ifndef SIM
-  `ifdef FPGA
-    `include "constants.sv"
-  `else
-    `include "rtl/constants.sv"
-  `endif
+`ifdef FPGA
+  `include "constants.sv"
+`else
+  `include "rtl/constants.sv"
+`endif
+`endif
+
+  // Mapping I2C here as this is the toplevel module on the FPGA
+`ifdef FPGA
+  logic sda_i, sda_o, sda_oe;
+  assign sda   = (sda_oe) ? sda_o : 1'bZ;
+  assign sda_i = sda;
 `endif
 
   logic mem_ce, memwrite, mem_busy, mem_valid;
@@ -65,8 +78,6 @@ module cpu #(
   logic intr_timer;
   logic load_access_fault;
   logic [2:0] funct3;
-  wire scl, sda, _unused;
-  assign _unused = &{sda, scl};
   memory #(
       .CLK_FREQ(CLK_FREQ),
       .BAUD(BAUD)
@@ -87,7 +98,9 @@ module cpu #(
       .sclk(sclk),
       .sram_ce(sram_ce),
       .scl(scl),
-      .sda(sda),
+      .sda_i(sda_i),
+      .sda_o(sda_o),
+      .sda_oe(sda_oe),
       .gpio_in(gpio_in),
       .gpio_out(gpio_out),
       .cos_ds(cos_ds),

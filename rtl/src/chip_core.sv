@@ -39,7 +39,8 @@ module chip_core #(
     assign input_pd = '0;
 
     // Set the bidir as output
-    assign bidir_oe = -1;
+    assign bidir_oe[17:10] = -1;
+    assign bidir_oe[8:0] = -1;
     assign bidir_cs = '0;
     assign bidir_sl = '0;
     assign bidir_ie = ~bidir_oe;
@@ -62,14 +63,19 @@ module chip_core #(
         .tx(bidir_out[3]),
         .gpio_out(bidir_out[7:4]),
 
-        .cos_ds(bidir_out[8]),
-        .cos_ds_n(bidir_out[9]),
-        .sin_ds(bidir_out[10]),
-        .sin_ds_n(bidir_out[11]),
-        .lo_i(bidir_out[12]),
-        .lo_q(bidir_out[13]),
-        .lo_ix(bidir_out[14]),
-        .lo_qx(bidir_out[15])
+        .scl(bidir_out[8]),
+        .sda_i(input_in[6]),
+        .sda_o(bidir_out[9]),
+        .sda_oe(bidir_oe[9]),
+
+        .cos_ds(bidir_out[10]),
+        .cos_ds_n(bidir_out[11]),
+        .sin_ds(bidir_out[12]),
+        .sin_ds_n(bidir_out[13]),
+        .lo_i(bidir_out[14]),
+        .lo_q(bidir_out[15]),
+        .lo_ix(bidir_out[16]),
+        .lo_qx(bidir_out[17])
    );
 
 endmodule
