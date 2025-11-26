@@ -130,6 +130,8 @@ module memory #(
 
   logic [31:0] master_dataout, sram_dataout, i2c_dataout;
 
+  logic [7:0] gpio_in_sync;
+
   // This ensures that the spi_master actually started working
   // Otherwise we would assume it has finished before it began
   // TODO: Rewrite as seperate states like READING_AWAIT, ...
@@ -210,6 +212,9 @@ module memory #(
   always_ff @(posedge clk) begin
     mtime <= mtime + 1;
 
+    // Avoiding metastability
+    gpio_in_sync <= gpio_in;
+
     if (reset == 0) begin
       state <= IDLE;
       uart_en <= 0;
@@ -217,6 +222,7 @@ module memory #(
       mtimecmp <= 0;
       freq_status[1:0] <= 2'b00;
       gpio_out <= 8'd0;
+      gpio_in_sync <= 8'd0;
     end else if (ce) begin
       state   <= IDLE;
       uart_en <= 0;
@@ -251,7 +257,7 @@ module memory #(
             target <= GPIO;
             state  <= GPIO_WAIT;
 
-            if (~memwrite) dataout <= {24'b0, gpio_in};
+            if (~memwrite) dataout <= {24'b0, gpio_in_sync};
             else state <= FAULT;
 
             // == UART ==================================

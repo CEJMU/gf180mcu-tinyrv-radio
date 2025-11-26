@@ -21,6 +21,7 @@ module csr (
     output logic [15:0] isr_target
 );
 
+  logic intr_ext_sync;
   logic timer_interrupt;
   logic external_interrupt;
 
@@ -41,8 +42,10 @@ module csr (
   assign isr_return = mepc[15:0];
 
   always_ff @(posedge clk) begin
+    intr_ext_sync <= intr_ext;
+
     mip[TIMER] <= intr_timer;
-    if (intr_ext) mip[EXTERNAL] <= 1;
+    if (intr_ext_sync) mip[EXTERNAL] <= 1;
 
     if (enter_isr) begin
       mepc <= {16'b0, pc};
@@ -78,6 +81,7 @@ module csr (
       mepc <= 32'd0;
       mcause <= 32'd0;
       mip <= 32'd0;
+      intr_ext_sync <= 0;
     end
   end
 
