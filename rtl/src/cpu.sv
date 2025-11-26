@@ -20,6 +20,7 @@ module cpu #(
 `endif
     output logic scl,
 
+    input  logic rx,
     output logic tx,
 
     input  logic [3:0] gpio_in,
@@ -75,9 +76,10 @@ module cpu #(
     if (reset == 0) iword <= 0;
   end
 
-  logic intr_timer;
-  logic load_access_fault;
+  logic       intr_timer;
+  logic       load_access_fault;
   logic [2:0] funct3;
+  logic       uart_rx_valid;
   memory #(
       .CLK_FREQ(CLK_FREQ),
       .BAUD(BAUD)
@@ -94,7 +96,9 @@ module cpu #(
       .valid(mem_valid),
       .so(so),
       .si(si),
+      .rx(rx),
       .tx(tx),
+      .uart_rx_valid(uart_rx_valid),
       .sclk(sclk),
       .sram_ce(sram_ce),
       .scl(scl),
@@ -159,6 +163,7 @@ module cpu #(
       .reset(reset),
       .intr_timer(intr_timer),
       .intr_ext(intr_ext),
+      .uart_rx_valid(uart_rx_valid),
       .exceptions(exceptions),
       .mret(mret),
       .enter_isr(jump_to_isr),

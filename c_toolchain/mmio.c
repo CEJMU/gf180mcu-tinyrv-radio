@@ -18,6 +18,12 @@ volatile uint8_t *const FREQ_STATUS = (uint8_t *)(GPIO_OUT + 24);
 volatile uint32_t *const FREQ_OSR_FC = (uint32_t *)(GPIO_OUT + 28);
 volatile uint8_t *const FREQ_LO_DIV = (uint8_t *)(GPIO_OUT + 32);
 
+volatile uint8_t *const UART_RX_STATUS = (uint8_t *)(GPIO_OUT + 33);
+volatile uint8_t *const UART_RX_DATA = (uint8_t *)(GPIO_OUT + 34);
+
+volatile uint16_t *const UART_RX_CPB = (uint16_t *)(GPIO_OUT + 36);
+volatile uint16_t *const UART_TX_CPB = (uint16_t *)(GPIO_OUT + 40);
+
 void freq_reset_n_set(uint8_t reset_n) {
   uint8_t status = *FREQ_STATUS;
   status &= 0xFE;
@@ -43,3 +49,27 @@ uint32_t freq_osr_fc_get() { return *FREQ_OSR_FC; }
 void freq_osr_fc_set(uint32_t osr_fc) { *FREQ_OSR_FC = osr_fc; }
 
 void freq_lo_div_set(uint8_t lo_div) { *FREQ_LO_DIV = lo_div; }
+
+char uart_data_read() { return *UART_RX_DATA; }
+
+void uart_rx_enable() {
+  uint8_t current_status = *UART_RX_STATUS;
+  current_status |= 0x01;
+  *UART_RX_STATUS = current_status;
+}
+
+void uart_rx_disable() {
+  uint8_t current_status = *UART_RX_STATUS;
+  current_status &= 0xFE;
+  *UART_RX_STATUS = current_status;
+}
+
+uint16_t uart_compute_cpb(uint32_t freq_ns, uint32_t baud) {
+  double bit_p = 1e9 * (1.0 / baud);
+  double clk_p = 1e9 * (1.0 / freq_ns);
+  return (uint16_t)(bit_p / clk_p);
+}
+
+void uart_rx_set_cpb(uint16_t cpb) { *UART_RX_CPB = cpb; }
+
+void uart_tx_set_cpb(uint16_t cpb) { *UART_TX_CPB = cpb; }

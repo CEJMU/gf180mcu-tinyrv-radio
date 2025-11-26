@@ -41,8 +41,6 @@ module i2c_master (
 
   states_t        state = RESET;
 
-  // logic           sda_tmp;
-
   logic           scl_tmp = 1;
   logic           scl_trigger = 0;
   logic    [31:0] scl_counter = 0;

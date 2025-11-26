@@ -26,9 +26,20 @@ void start_transmission();
 void end_transmission();
 
 int main() {
+  uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+  uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+
   printf("Hello\r\n");
   interrupts_disable();
   mtvec_set_table(&mtvec_table);
+
+  uart_rx_enable();
+  uart_interrupt_enable();
+  interrupts_enable();
+
+  while (1) {
+  };
+
   external_interrupt_enable();
 
   f_c[0] = compute_osr_fc(1500.0, 3);
@@ -69,6 +80,11 @@ __attribute__((interrupt("machine"))) void timer_intr_handler() {
     external_interrupt_clear();
     external_interrupt_enable();
   }
+}
+
+__attribute__((weak, interrupt("machine"))) void uart_intr_handler() {
+  printf("UART interrupt occured! Received %c\r\n", uart_data_read());
+  uart_interrupt_clear();
 }
 
 void start_transmission() {

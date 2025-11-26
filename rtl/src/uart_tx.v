@@ -14,7 +14,8 @@ module uart_tx #(
     output wire       uart_txd,      // UART transmit pin.
     output wire       uart_tx_busy,  // Module busy sending previous item.
     input  wire       uart_tx_en,    // Send the data on uart_tx_data
-    input  wire [7:0] uart_tx_data   // The data to be sent
+    input  wire [7:0] uart_tx_data,   // The data to be sent
+    input wire [15:0] CYCLES_PER_BIT
 );
 
   // --------------------------------------------------------------------------- 
@@ -24,12 +25,12 @@ module uart_tx #(
   //
   // Input bit rate of the UART line.
   // parameter BIT_RATE = 115_200;  // bits / sec
-  localparam BIT_P = 1_000_000_000 * 1 / BAUD;  // nanoseconds
+  // localparam BIT_P = 1_000_000_000 * 1 / BAUD;  // nanoseconds
 
-  //
-  // Clock frequency in hertz.
-  // parameter CLK_HZ = 12_000_000;
-  localparam CLK_P = 1_000_000_000 * 1 / CLK_FREQ;  // nanoseconds
+  // //
+  // // Clock frequency in hertz.
+  // // parameter CLK_HZ = 12_000_000;
+  // localparam CLK_P = 1_000_000_000 * 1 / CLK_FREQ;  // nanoseconds
 
   //
   // Number of data bits recieved per UART packet.
@@ -45,11 +46,12 @@ module uart_tx #(
 
   //
   // Number of clock cycles per uart bit.
-  localparam CYCLES_PER_BIT = BIT_P / CLK_P;
+  // localparam CYCLES_PER_BIT = BIT_P / CLK_P;
 
   //
   // Size of the registers which store sample counts and bit durations.
-  localparam COUNT_REG_LEN = 1 + $clog2(CYCLES_PER_BIT);
+  // localparam COUNT_REG_LEN = 1 + $clog2(CYCLES_PER_BIT);
+  localparam COUNT_REG_LEN = 16;
 
   // --------------------------------------------------------------------------- 
   // Internal registers.

@@ -5,6 +5,7 @@ module csr (
     // Interrupt signals
     input  logic       intr_timer,
     input  logic       intr_ext,
+    input  logic       uart_rx_valid,
     input  logic [2:0] exceptions,
     input  logic       mret,
     input  logic       enter_isr,
@@ -27,6 +28,7 @@ module csr (
 
   localparam byte TIMER = 7;
   localparam byte EXTERNAL = 11;
+  localparam byte UART = 16;
 
   logic [31:0] mstatus;  // 0x300
   logic [31:0] mie;  // 0x304
@@ -37,7 +39,8 @@ module csr (
 
   assign timer_interrupt = mstatus[3] && mie[TIMER] && mip[TIMER];
   assign external_interrupt = mstatus[3] && mie[EXTERNAL] && mip[EXTERNAL];
-  assign interrupt_pending = timer_interrupt || external_interrupt;
+  assign uart_interrupt = mstatus[3] && mie[UART] && mip[UART];
+  assign interrupt_pending = timer_interrupt || external_interrupt || uart_interrupt;
 
   assign isr_return = mepc[15:0];
 
@@ -46,6 +49,7 @@ module csr (
 
     mip[TIMER] <= intr_timer;
     if (intr_ext_sync) mip[EXTERNAL] <= 1;
+    if (uart_rx_valid) mip[UART] <= 1;
 
     if (enter_isr) begin
       mepc <= {16'b0, pc};
@@ -69,6 +73,7 @@ module csr (
     end
 
     if (external_interrupt) mcause <= {1'b1, 31'd11};
+    else if (uart_interrupt) mcause <= {1'b1, 31'd16};
     else if (timer_interrupt) mcause <= {1'b1, 31'd7};
     else if (exceptions[1]) mcause <= {1'b0, 31'd2};  // illegal instruction
     else if (exceptions[0]) mcause <= {1'b0, 31'd0};  // PC misaligned

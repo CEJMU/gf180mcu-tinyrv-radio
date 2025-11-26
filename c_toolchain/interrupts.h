@@ -4,6 +4,7 @@
 enum {
   INTR_MTI = 7,
   INTR_MEI = 11,
+  INTR_UART = 16,
 };
 
 enum {
@@ -15,6 +16,7 @@ enum {
 void exception_handler();
 __attribute__((interrupt("machine"))) void ext_intr_handler();
 __attribute__((interrupt("machine"))) void timer_intr_handler();
+__attribute__((interrupt("machine"))) void uart_intr_handler();
 
 __attribute__((naked, aligned(4), section(".text.mtvec_table"))) void
 mtvec_table();

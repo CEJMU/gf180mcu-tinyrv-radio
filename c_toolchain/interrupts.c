@@ -34,6 +34,9 @@ __attribute__((weak, interrupt("machine"))) void ext_intr_handler() {
 __attribute__((weak, interrupt("machine"))) void timer_intr_handler() {
   printf("Timer interrupt occured!\r\n");
 }
+__attribute__((weak, interrupt("machine"))) void uart_intr_handler() {
+  printf("UART interrupt occured!\r\n");
+}
 
 __attribute__((naked, aligned(4))) void mtvec_table() {
   __asm__ volatile(".org  mtvec_table + 0*4;"
@@ -43,5 +46,8 @@ __attribute__((naked, aligned(4))) void mtvec_table() {
                    "j     timer_intr_handler;"
 
                    ".org  mtvec_table + 11*4;"
-                   "j     ext_intr_handler;");
+                   "j     ext_intr_handler;"
+
+                   ".org  mtvec_table + 16*4;"
+                   "j     uart_intr_handler;");
 }

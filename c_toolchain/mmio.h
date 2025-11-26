@@ -21,11 +21,24 @@ extern volatile uint8_t *const FREQ_STATUS;
 extern volatile uint32_t *const FREQ_OSR_FC;
 extern volatile uint8_t *const FREQ_LO_DIV;
 
+extern volatile uint8_t *const UART_RX_STATUS;
+extern volatile uint8_t *const UART_RX_DATA;
+
+extern volatile uint16_t *const UART_RX_CPB;
+extern volatile uint16_t *const UART_TX_CPB;
+
 void freq_reset_n_set(uint8_t reset_n);
 void freq_start_set(uint8_t start);
 uint8_t freq_active_get();
 uint32_t freq_osr_fc_get();
 void freq_osr_fc_set(uint32_t osr_fc);
 void freq_lo_div_set(uint8_t lo_div);
+char uart_data_read();
+void uart_rx_enable();
+void uart_rx_disable();
+
+uint16_t uart_compute_cpb(uint32_t freq_ns, uint32_t baud);
+void uart_rx_set_cpb(uint16_t cpb);
+void uart_tx_set_cpb(uint16_t cpb);
 
 #endif // MMIO_H_

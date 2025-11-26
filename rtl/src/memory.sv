@@ -42,7 +42,9 @@ module memory #(
     output logic sda_oe,
 
     // UART Interface
+    input  logic rx,
     output logic tx,
+    output logic uart_rx_valid,
 
     // GPIOs
     input  logic [7:0] gpio_in,
@@ -71,27 +73,34 @@ module memory #(
 `endif
 
   // verilog_format: off
-  localparam int SRAM_LOW_ADDR =    32'h00000000;
-  localparam int SRAM_HIGH_ADDR =   32'h007FFFFF;
+  localparam int SRAM_LOW_ADDR =       32'h00000000;
+  localparam int SRAM_HIGH_ADDR =      32'h007FFFFF;
 
-  localparam int GPIO_OUT_ADDR =    32'h00800000;
-  localparam int GPIO_IN_ADDR =     32'h00800001;
+  localparam int GPIO_OUT_ADDR =       32'h00800000;
+  localparam int GPIO_IN_ADDR =        32'h00800001;
 
-  localparam int UART_TX_ADDR =     32'h00800002;
+  localparam int UART_TX_ADDR =        32'h00800002;
 
-  localparam int I2C_DEVICE_ADDR =  32'h00800003;
-  localparam int I2C_DATA_ADDR =    32'h00800004;  // is 4-byte aligned
-  localparam int I2C_MASK_ADDR =    32'h00800005;
+  localparam int I2C_DEVICE_ADDR =     32'h00800003;
+  localparam int I2C_DATA_ADDR =       32'h00800004;  // is 4-byte aligned
+  localparam int I2C_MASK_ADDR =       32'h00800005;
 
   // ===== Alignment required =====
-  localparam int MTIME_ADDR =       32'h00800008;
-  localparam int MTIMEH_ADDR =      32'h0080000C;
-  localparam int MTIMECMP_ADDR =    32'h00800010;
-  localparam int MTIMECMPH_ADDR =   32'h00800014;
+  localparam int MTIME_ADDR =          32'h00800008;
+  localparam int MTIMEH_ADDR =         32'h0080000C;
+  localparam int MTIMECMP_ADDR =       32'h00800010;
+  localparam int MTIMECMPH_ADDR =      32'h00800014;
 
-  localparam int FREQ_STATUS_ADDR = 32'h00800018;
-  localparam int FREQ_OSR_FC_ADDR = 32'h0080001C;
-  localparam int FREQ_LO_DIV_ADDR = 32'h00800020;
+  localparam int FREQ_STATUS_ADDR =    32'h00800018;
+  localparam int FREQ_OSR_FC_ADDR =    32'h0080001C;
+  localparam int FREQ_LO_DIV_ADDR =    32'h00800020;
+
+  localparam int UART_RX_STATUS_ADDR = 32'h00800021;
+  localparam int UART_RX_DATA_ADDR =   32'h00800022; // readonly!
+
+  // ===== Alignment required =====
+  localparam int UART_RX_CPB_ADDR =   32'h00800024;
+  localparam int UART_TX_CPB_ADDR =   32'h00800028;
 // verilog_format: on
 
   typedef enum {
@@ -171,8 +180,12 @@ module memory #(
       .valid(i2c_valid)
   );
 
-  logic uart_busy;
-  logic uart_en;
+  localparam BIT_P = 1_000_000_000 * 1 / BAUD;  // nanoseconds
+  localparam CLK_P = 1_000_000_000 * 1 / CLK_FREQ;  // nanoseconds
+  localparam [15:0] CYCLES_PER_BIT_DEFAULT = 16'(BIT_P / CLK_P);
+  logic uart_tx_busy;
+  logic uart_tx_en;
+  logic [15:0] uart_tx_cpb;
 
   uart_tx #(
       .CLK_FREQ(CLK_FREQ),
@@ -181,9 +194,28 @@ module memory #(
       .clk(clk),
       .resetn(reset),
       .uart_txd(tx),
-      .uart_tx_busy(uart_busy),
-      .uart_tx_en(uart_en),
-      .uart_tx_data(datain_reg[7:0])
+      .uart_tx_busy(uart_tx_busy),
+      .uart_tx_en(uart_tx_en),
+      .uart_tx_data(datain_reg[7:0]),
+      .CYCLES_PER_BIT(uart_tx_cpb)
+  );
+
+  logic [ 2:0] uart_rx_status;
+  logic [ 7:0] uart_rx_data;
+  logic [15:0] uart_rx_cpb;
+  assign uart_rx_valid = uart_rx_status[2];
+  uart_rx #(
+      .CLK_FREQ(CLK_FREQ),
+      .BAUD(BAUD)
+  ) uart_receiver (
+      .clk(clk),
+      .resetn(reset),
+      .uart_rxd(rx),
+      .uart_rx_en(uart_rx_status[0]),
+      .uart_rx_break(uart_rx_status[1]),
+      .uart_rx_valid(uart_rx_status[2]),
+      .uart_rx_data(uart_rx_data),
+      .CYCLES_PER_BIT(uart_rx_cpb)
   );
 
   // active | start | reset_n
@@ -217,15 +249,18 @@ module memory #(
 
     if (reset == 0) begin
       state <= IDLE;
-      uart_en <= 0;
+      uart_tx_en <= 0;
       mtime <= 0;
       mtimecmp <= 0;
       freq_status[1:0] <= 2'b00;
       gpio_out <= 8'd0;
       gpio_in_sync <= 8'd0;
+      uart_rx_status[0] <= 1'b0;
+      uart_tx_cpb <= CYCLES_PER_BIT_DEFAULT;
+      uart_rx_cpb <= CYCLES_PER_BIT_DEFAULT;
     end else if (ce) begin
-      state   <= IDLE;
-      uart_en <= 0;
+      state <= IDLE;
+      uart_tx_en <= 0;
     end else begin
       // starting when ce falls to 0
       unique case (state)
@@ -265,7 +300,7 @@ module memory #(
             if (memwrite) begin
               target <= UART;
               datain_reg <= datain;
-              uart_en <= 1;
+              uart_tx_en <= 1;
             end else state <= FAULT;  // Reading from UART not possible here
 
             // == I2C data ==================================
@@ -274,7 +309,7 @@ module memory #(
             target <= I2C;
 
             // == Control registers ==================================
-          end else if (addr >= I2C_DEVICE_ADDR && addr <= FREQ_LO_DIV_ADDR) begin
+          end else if (addr >= I2C_DEVICE_ADDR && addr <= UART_TX_CPB_ADDR) begin
             datain_reg <= datain;
             state <= CONTROL_REG;
 
@@ -316,7 +351,7 @@ module memory #(
           // HACK: Das mit uart_en is net schön gelöst
           if (master_busy) begin
             sclk_flag <= 1;
-            if (target == UART) uart_en <= 0;
+            if (target == UART) uart_tx_en <= 0;
           end
 
           // Master became busy (sclk_flag) and is now finished
@@ -328,27 +363,35 @@ module memory #(
           state <= FINISH;
           if (memwrite) begin
             case (addr_reg)
-              I2C_DEVICE_ADDR:  i2c_addr <= datain_reg[7:0];
-              I2C_MASK_ADDR:    i2c_mask <= datain_reg[3:0];
-              MTIME_ADDR:       mtime[31:0] <= datain_reg;
-              MTIMEH_ADDR:      mtime[63:32] <= datain_reg;
-              MTIMECMP_ADDR:    mtimecmp[31:0] <= datain_reg;
-              MTIMECMPH_ADDR:   mtimecmp[63:32] <= datain_reg;
-              FREQ_STATUS_ADDR: freq_status[1:0] <= datain_reg[1:0];
-              FREQ_OSR_FC_ADDR: osr_fc_reg <= datain_reg;
-              FREQ_LO_DIV_ADDR: lo_reg <= datain_reg[2:0];
+              I2C_DEVICE_ADDR:     i2c_addr <= datain_reg[7:0];
+              I2C_MASK_ADDR:       i2c_mask <= datain_reg[3:0];
+              MTIME_ADDR:          mtime[31:0] <= datain_reg;
+              MTIMEH_ADDR:         mtime[63:32] <= datain_reg;
+              MTIMECMP_ADDR:       mtimecmp[31:0] <= datain_reg;
+              MTIMECMPH_ADDR:      mtimecmp[63:32] <= datain_reg;
+              FREQ_STATUS_ADDR:    freq_status[1:0] <= datain_reg[1:0];
+              FREQ_OSR_FC_ADDR:    osr_fc_reg <= datain_reg;
+              FREQ_LO_DIV_ADDR:    lo_reg <= datain_reg[2:0];
+              UART_RX_STATUS_ADDR: uart_rx_status[0] <= datain_reg[0];
+              // UART_RX_DATA_ADDR: lo_reg <= datain_reg[2:0];
+              UART_RX_CPB_ADDR:    uart_rx_cpb <= datain_reg[15:0];
+              UART_TX_CPB_ADDR:    uart_tx_cpb <= datain_reg[15:0];
             endcase
           end else begin
             case (addr_reg)
-              I2C_DEVICE_ADDR:  dataout <= {24'b0, i2c_addr};
-              I2C_MASK_ADDR:    dataout <= {28'b0, i2c_mask};
-              MTIME_ADDR:       dataout <= mtime[31:0];
-              MTIMEH_ADDR:      dataout <= mtime[63:32];
-              MTIMECMP_ADDR:    dataout <= mtimecmp[31:0];
-              MTIMECMPH_ADDR:   dataout <= mtimecmp[63:32];
-              FREQ_STATUS_ADDR: dataout <= {29'b0, freq_status};
-              FREQ_OSR_FC_ADDR: dataout <= osr_fc_reg;
-              FREQ_LO_DIV_ADDR: dataout <= {29'b0, lo_reg};
+              I2C_DEVICE_ADDR:     dataout <= {24'b0, i2c_addr};
+              I2C_MASK_ADDR:       dataout <= {28'b0, i2c_mask};
+              MTIME_ADDR:          dataout <= mtime[31:0];
+              MTIMEH_ADDR:         dataout <= mtime[63:32];
+              MTIMECMP_ADDR:       dataout <= mtimecmp[31:0];
+              MTIMECMPH_ADDR:      dataout <= mtimecmp[63:32];
+              FREQ_STATUS_ADDR:    dataout <= {29'b0, freq_status};
+              FREQ_OSR_FC_ADDR:    dataout <= osr_fc_reg;
+              FREQ_LO_DIV_ADDR:    dataout <= {29'b0, lo_reg};
+              UART_RX_STATUS_ADDR: dataout <= {29'b0, uart_rx_status};
+              UART_RX_DATA_ADDR:   dataout <= {24'b0, uart_rx_data};
+              UART_RX_CPB_ADDR:    dataout <= {16'b0, uart_rx_cpb};
+              UART_TX_CPB_ADDR:    dataout <= {16'b0, uart_tx_cpb};
             endcase
           end
         end
@@ -369,7 +412,7 @@ module memory #(
       master_busy = i2c_busy;
       master_valid = i2c_valid;
     end else if (target == UART) begin
-      master_busy = uart_busy;
+      master_busy = uart_tx_busy;
     end
   end
 

@@ -3,7 +3,12 @@
 
 // TODO: I2C pullups direkt hier definieren?
 // TODO: I2C master mal gescheit machen
-// TODO: UART receiver mit interrupts
+// TODO: I2C master counter programmierbar machen
+// TODO: Schmitt Trigger???
+// DONE: UART receiver mit interrupts
+// DONE: UART baud programmierbar machen
+// TODO: Basys3 Test
+// TODO: CE Logo in Ecke
 `default_nettype none
 
 module chip_top #(

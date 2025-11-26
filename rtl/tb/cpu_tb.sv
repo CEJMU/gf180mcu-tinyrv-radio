@@ -10,9 +10,8 @@ module cpu_tb ();
   logic rst_n;
   logic intr_ext;
 
-  wire  VDD = 1;
-  wire  VSS = 0;
-
+  logic rx;
+  logic uart_en;
   cpu dut (
       .clk(clk),
       .reset(rst_n),
@@ -20,7 +19,8 @@ module cpu_tb ();
       .si(si),
       .sclk(sclk),
       .sram_ce(sram_ce),
-      .intr_ext(intr_ext)
+      .intr_ext(intr_ext),
+      .rx(rx)
   );
 
   sram_sim #(
@@ -32,6 +32,14 @@ module cpu_tb ();
       .ce(sram_ce),
       .si(si),
       .so(so)
+  );
+
+  uart_tx uart_tx (
+      .clk(clk),
+      .resetn(rst_n),
+      .uart_txd(rx),
+      .uart_tx_data(8'hA5),
+      .uart_tx_en(uart_en)
   );
 
   always begin
@@ -52,9 +60,10 @@ module cpu_tb ();
 
   initial begin
     $dumpfile("cpu.vcd");
-    $dumpvars(0, dut, sram);
+    $dumpvars(0, dut, sram, uart_tx);
 
     intr_ext = 0;
+    uart_en  = 0;
 
     // Uncomment and adjust the name to your own instance names for regs
     // and registers
@@ -66,7 +75,8 @@ module cpu_tb ();
     rst_n = 1;
     // for (int i = 0; i < 300000; i++) #PERIOD_NS;
     #20_000_000;
-    intr_ext = 1;
+    // intr_ext = 1;
+    uart_en = 1;
     #PERIOD_NS;
     #PERIOD_NS;
     #PERIOD_NS;
@@ -74,6 +84,7 @@ module cpu_tb ();
     #PERIOD_NS;
     #PERIOD_NS;
     intr_ext = 0;
+    uart_en  = 0;
 
     // Run for 3s
     #1_000_000_000;
