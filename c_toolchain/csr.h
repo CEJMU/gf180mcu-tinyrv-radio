@@ -15,6 +15,7 @@ void external_interrupt_clear();
 uint32_t external_interrupt_pending();
 void uart_interrupt_disable();
 void uart_interrupt_enable();
+uint32_t uart_interrupt_pending();
 void uart_interrupt_clear();
 
 uint32_t mcause_get();

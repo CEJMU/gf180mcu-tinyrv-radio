@@ -43,6 +43,7 @@ VERILOG_FILES:
 - dir::../rtl/src/cordic_iterative.v
 - dir::../rtl/src/imm_gen.sv
 - dir::../rtl/src/uart_tx.v
+- dir::../rtl/src/uart_rx.v
 - dir::../rtl/src/cordic_slice.v
 - dir::../rtl/src/instructioncounter.sv
 

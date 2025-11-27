@@ -73,9 +73,8 @@ uint32_t external_interrupt_pending() {
   int mip;
   __asm__ volatile("csrr %0, mip" : "=r"(mip) : :);
 
-  /* int mask = 1 << 11; */
-  /* return mip & mask; */
-  return mip;
+  int mask = 1 << 11;
+  return mip & mask;
 }
 
 void uart_interrupt_disable(){
@@ -97,6 +96,14 @@ void uart_interrupt_enable(){
   mie |= mask;
 
   __asm__ volatile("csrw mie, %0" : : "r"(mie) :);
+}
+
+uint32_t uart_interrupt_pending() {
+  int mip;
+  __asm__ volatile("csrr %0, mip" : "=r"(mip) : :);
+
+  int mask = 1 << 16;
+  return mip & mask;
 }
 
 void uart_interrupt_clear(){

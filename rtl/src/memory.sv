@@ -84,6 +84,7 @@ module memory #(
   localparam int I2C_DEVICE_ADDR =     32'h00800003;
   localparam int I2C_DATA_ADDR =       32'h00800004;  // is 4-byte aligned
   localparam int I2C_MASK_ADDR =       32'h00800005;
+  localparam int I2C_ACK_ADDR =        32'h00800006;
 
   // ===== Alignment required =====
   localparam int MTIME_ADDR =          32'h00800008;
@@ -99,8 +100,9 @@ module memory #(
   localparam int UART_RX_DATA_ADDR =   32'h00800022; // readonly!
 
   // ===== Alignment required =====
-  localparam int UART_RX_CPB_ADDR =   32'h00800024;
-  localparam int UART_TX_CPB_ADDR =   32'h00800028;
+  localparam int UART_RX_CPB_ADDR =    32'h00800024;
+  localparam int UART_TX_CPB_ADDR =    32'h00800028;
+  localparam int SCL_RATIO_ADDR =      32'h0080002C;
 // verilog_format: on
 
   typedef enum {
@@ -118,7 +120,9 @@ module memory #(
     SRAM,
     I2C,
     UART,
-    GPIO
+    CONTROL,
+    GPIO,
+    TFAULT
   } target_t;
 
   states_t        state = IDLE;
@@ -134,7 +138,7 @@ module memory #(
   logic master_reset, master_busy, master_valid;
   logic sram_reset, sram_busy, sram_valid;
   logic i2c_reset, i2c_busy, i2c_valid;
-  logic [7:0] i2c_addr;
+  logic [6:0] i2c_addr;
   logic [3:0] i2c_mask;
 
   logic [31:0] master_dataout, sram_dataout, i2c_dataout;
@@ -155,7 +159,7 @@ module memory #(
       .so(so),
       .sclk(sclk),
       .ce(sram_ce),
-      .addr(addr_reg),  // NOTE: the SRAM is 23 bit wide but uses 24 bit addresses
+      .addr(addr_reg[23:0]),  // NOTE: the SRAM is 23 bit wide but uses 24 bit addresses
       .byte_mask(funct3[1:0]),
       .data_in(datain_reg),
       .data_out(sram_dataout),
@@ -164,9 +168,14 @@ module memory #(
       .valid(sram_valid)
   );
 
+  logic [4:0] i2c_acks;
+  localparam TARGET = 100_000;  // Hz
+  localparam [15:0] SCL_RATIO_DEFAULT = (CLK_FREQ / TARGET) / 2;
+  logic [15:0] scl_ratio;
   i2c_master i2c_master (
       .clk(clk),
       .reset(i2c_reset),
+      .scl_ratio(scl_ratio),
       .sda_i(sda_i),
       .sda_o(sda_o),
       .sda_oe(sda_oe),
@@ -177,7 +186,8 @@ module memory #(
       .data_out(i2c_dataout),
       .write(memwrite_reg),
       .busy(i2c_busy),
-      .valid(i2c_valid)
+      .valid(i2c_valid),
+      .acks(i2c_acks)
   );
 
   localparam BIT_P = 1_000_000_000 * 1 / BAUD;  // nanoseconds
@@ -258,12 +268,13 @@ module memory #(
       uart_rx_status[0] <= 1'b0;
       uart_tx_cpb <= CYCLES_PER_BIT_DEFAULT;
       uart_rx_cpb <= CYCLES_PER_BIT_DEFAULT;
+      scl_ratio <= SCL_RATIO_DEFAULT;
     end else if (ce) begin
       state <= IDLE;
       uart_tx_en <= 0;
     end else begin
       // starting when ce falls to 0
-      unique case (state)
+      case (state)
         IDLE: begin
           if (memwrite == 1) state <= WRITING;
           else state <= READING;
@@ -271,6 +282,7 @@ module memory #(
           addr_reg <= addr;
           memwrite_reg <= memwrite;
           sclk_flag <= 0;
+          target <= TFAULT;
 
           // == SRAM ==================================
           if (addr >= SRAM_LOW_ADDR && addr <= SRAM_HIGH_ADDR) begin
@@ -303,15 +315,22 @@ module memory #(
               uart_tx_en <= 1;
             end else state <= FAULT;  // Reading from UART not possible here
 
+            // == I2C device ==================================
+          end else if (addr == I2C_DEVICE_ADDR) begin
+            datain_reg <= datain;
+            state <= CONTROL_REG;
+            target <= CONTROL;
+
             // == I2C data ==================================
           end else if (addr == I2C_DATA_ADDR) begin
             datain_reg <= datain;
             target <= I2C;
 
             // == Control registers ==================================
-          end else if (addr >= I2C_DEVICE_ADDR && addr <= UART_TX_CPB_ADDR) begin
+          end else if (addr >= I2C_MASK_ADDR && addr <= SCL_RATIO_ADDR) begin
             datain_reg <= datain;
             state <= CONTROL_REG;
+            target <= CONTROL;
 
             // == Load Access Fault ==================================
           end else state <= FAULT;
@@ -321,7 +340,7 @@ module memory #(
           if (master_busy) sclk_flag <= 1;
 
           // Master became busy (sclk_flag) and is now finished
-          if (sclk_flag && master_valid && ~master_busy) begin
+          if (sclk_flag && ~master_busy) begin
             state <= VALID;
 
             if (target == SRAM) begin
@@ -363,7 +382,7 @@ module memory #(
           state <= FINISH;
           if (memwrite) begin
             case (addr_reg)
-              I2C_DEVICE_ADDR:     i2c_addr <= datain_reg[7:0];
+              I2C_DEVICE_ADDR:     i2c_addr <= datain_reg[6:0];
               I2C_MASK_ADDR:       i2c_mask <= datain_reg[3:0];
               MTIME_ADDR:          mtime[31:0] <= datain_reg;
               MTIMEH_ADDR:         mtime[63:32] <= datain_reg;
@@ -376,11 +395,13 @@ module memory #(
               // UART_RX_DATA_ADDR: lo_reg <= datain_reg[2:0];
               UART_RX_CPB_ADDR:    uart_rx_cpb <= datain_reg[15:0];
               UART_TX_CPB_ADDR:    uart_tx_cpb <= datain_reg[15:0];
+              SCL_RATIO_ADDR:      scl_ratio <= datain_reg[15:0];
             endcase
           end else begin
             case (addr_reg)
-              I2C_DEVICE_ADDR:     dataout <= {24'b0, i2c_addr};
+              I2C_DEVICE_ADDR:     dataout <= {25'b0, i2c_addr};
               I2C_MASK_ADDR:       dataout <= {28'b0, i2c_mask};
+              I2C_ACK_ADDR:        dataout <= {27'b0, i2c_acks};
               MTIME_ADDR:          dataout <= mtime[31:0];
               MTIMEH_ADDR:         dataout <= mtime[63:32];
               MTIMECMP_ADDR:       dataout <= mtimecmp[31:0];
@@ -392,6 +413,7 @@ module memory #(
               UART_RX_DATA_ADDR:   dataout <= {24'b0, uart_rx_data};
               UART_RX_CPB_ADDR:    dataout <= {16'b0, uart_rx_cpb};
               UART_TX_CPB_ADDR:    dataout <= {16'b0, uart_tx_cpb};
+              SCL_RATIO_ADDR:      dataout <= {16'b0, scl_ratio};
             endcase
           end
         end

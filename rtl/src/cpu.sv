@@ -61,7 +61,7 @@ module cpu #(
   logic [5:0] control_flags;
 
   logic [1:0] jump;
-  logic [15:0] imm, pc_new;
+  logic [22:0] imm, pc_new;
 
   logic [31:0] a, b, rd;
   logic [16:0] instruction;
@@ -126,7 +126,7 @@ module cpu #(
 
   // If we are in memory phase, the addr is the calculated address by the ALU
   // Else we use the programcounter to fetch the new iword
-  assign mem_addr = (memflag) ? rd_alu : {16'b0, pc_new};
+  assign mem_addr = (memflag) ? rd_alu : {9'b0, pc_new};
   assign funct3   = (memflag) ? iword[14:12] : FUNCT3_MEM_W;
 
   logic       jump_to_isr;
@@ -155,8 +155,8 @@ module cpu #(
       .csr_write(csr_write)
   );
 
-  logic [15:0] isr_return;
-  logic [15:0] isr_target;
+  logic [22:0] isr_return;
+  logic [22:0] isr_target;
   logic [31:0] csr_dataout;
   csr csr_i (
       .clk(clk),
@@ -191,12 +191,12 @@ module cpu #(
       .pc_misaligned(pc_misaligned)
   );
 
-  assign imm = (iword[6:0] == 7'b1100111) ? rd_alu[15:0] : immediate[15:0];
+  assign imm = (iword[6:0] == 7'b1100111) ? rd_alu[22:0] : immediate[22:0];
 
   // Branch behavior calculated by ALU with BNE, BEQ, ...
   always_comb begin
-    jump[0] = (control_flags[5]) ? rd_alu[16] : 1'b0;
-    jump[1] = (control_flags[5]) ? rd_alu[17] : 1'b1;
+    jump[0] = (control_flags[5]) ? rd_alu[23] : 1'b0;
+    jump[1] = (control_flags[5]) ? rd_alu[24] : 1'b1;
 
     if (mret) begin
       jump = 2'b11;
@@ -215,7 +215,7 @@ module cpu #(
   assign exceptions = {load_access_fault, illegal_instruction, pc_misaligned};
 
   assign instruction = {iword[31:25], iword[14:12], iword[6:0]};
-  assign a = (control_flags[3]) ? {16'h0000, pc_new} : rs1;
+  assign a = (control_flags[3]) ? {9'b0, pc_new} : rs1;
   assign b = (control_flags[4]) ? immediate : rs2;
   // alu result goes back to the regs only if we don't have a mem_phase
   // Then it's either LW or SW (where regwrite would be 0, so no problem)

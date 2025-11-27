@@ -251,6 +251,7 @@ def chip_top_runner():
         sources.append(proj_path / "../rtl/src/cordic_iterative.v")
         sources.append(proj_path / "../rtl/src/imm_gen.sv")
         sources.append(proj_path / "../rtl/src/uart_tx.v")
+        sources.append(proj_path / "../rtl/src/uart_rx.v")
         sources.append(proj_path / "../rtl/src/cordic_slice.v")
         sources.append(proj_path / "../rtl/src/instructioncounter.sv")
 

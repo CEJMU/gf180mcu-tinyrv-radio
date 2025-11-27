@@ -1,6 +1,7 @@
 module i2c_master (
     input logic clk,
     input logic reset,
+    input logic [15:0] scl_ratio,
 
     // I2C pins
     input  logic sda_i,
@@ -15,15 +16,15 @@ module i2c_master (
     output logic [31:0] data_out,
 
     // status flags
-    input  logic write,
+    input logic write,
     output logic busy,
-    output logic valid
+    output logic valid,
+    output logic [4:0] acks
 );
 
   typedef enum {
     RESET,
-    START1,
-    START2,
+    START,
     SEND_ADDR,
 
     SEND_CMD,
@@ -34,191 +35,217 @@ module i2c_master (
     SEND_FRAME,
     RECV_FRAME_ACK,
 
-    STOP1,
-    STOP2,
+    STOP,
     END
   } states_t;
 
   states_t        state = RESET;
 
-  logic           scl_tmp = 1;
-  logic           scl_trigger = 0;
+  logic           scl_reg;
+  logic           scl_trigger;
+  logic           data_trigger;
+  logic           command_trigger;
+
   logic    [31:0] scl_counter = 0;
 
   logic    [ 1:0] frame_index = 3;
+  logic    [ 1:0] next_frame_index = 3;
+  logic           has_next_index;
   logic           send_cmd = 1;
   logic    [ 7:0] frame;
 
-  byte            index;
-  logic           ack;
-  byte            signal_stage = 0;
+  logic           sda_i_sync0;
+  logic           sda_i_sync1;
 
-  always_ff @(posedge clk) begin
+  byte            index;
+
+  always_ff @(posedge clk) begin : scl_trigger_gen
+    sda_i_sync0 <= sda_i;
+    sda_i_sync1 <= sda_i_sync0;
     // Step clock down to 100 kHz as supported by I2C
-    scl_trigger <= 0;
-    if (scl_counter == 31) begin
-      scl_trigger <= 1;
+    if (scl_counter >= scl_ratio) begin
       scl_counter <= 0;
     end else scl_counter <= scl_counter + 1;
 
     if (reset) begin
-      scl_counter <= 31;
+      scl_counter <= 0;
     end
   end
+
+
+  logic is_sending;
+  assign is_sending = (state == START || state == SEND_ADDR || state == SEND_CMD || state == RECV_CMD_ACK || state == RECV_FRAME
+                        || state == SEND_FRAME_ACK || state == SEND_FRAME || state == RECV_FRAME_ACK);
+  assign scl = scl_reg;
+  assign scl_trigger = (scl_counter == scl_ratio);
+  assign data_trigger = (is_sending && scl_counter == {1'b0, scl_ratio[15:1]} && scl_reg == 0);
+  assign command_trigger = (scl_counter == {1'b0, scl_ratio[15:1]} && scl_reg == 1);
 
   // Posedge of scl. State transistions
   always_ff @(posedge clk) begin
     if (reset) begin
       state <= RESET;
+      scl_reg <= 1;
 
       send_cmd <= 1;
-      signal_stage <= 3;
-    end else if (scl_trigger == 1) begin  // == negedge of scl
-      if (signal_stage == 3) signal_stage <= 0;
-      else signal_stage <= signal_stage + 1;
+    end
 
-      if (signal_stage == 3) begin
-        unique case (state)
-          RESET:  state <= START1;
-          START1: state <= START2;
-          START2: begin
-            state <= SEND_ADDR;
-            index <= 6;
+    if (scl_trigger) begin
+      scl_reg <= ~scl_reg;
+    end
+
+    if (command_trigger) begin
+      case (state)
+        RESET: state <= START;
+
+        RECV_FRAME: data_out[frame_index*8+index] <= sda_i_sync1;
+        STOP: state <= END;
+        END: state <= END;
+      endcase
+    end
+
+    if (data_trigger) begin
+      case (state)
+        START: begin
+          state <= SEND_ADDR;
+          index <= 6;
+        end
+        SEND_ADDR: begin
+          if (index == 0) begin
+            state <= SEND_CMD;
+            index <= 7;
+          end else index <= index - 1;
+        end
+
+        SEND_CMD: state <= RECV_CMD_ACK;
+        RECV_CMD_ACK: begin
+          if (write) state <= SEND_FRAME;
+          else state <= RECV_FRAME;
+
+          if (mask[3] == 1) frame_index <= 3;
+          else if (mask[2] == 1) frame_index <= 2;
+          else if (mask[1] == 1) frame_index <= 1;
+          else frame_index <= 0;
+        end
+
+        RECV_FRAME: begin
+          if (index == 0) begin
+            state <= SEND_FRAME_ACK;
+            index <= 7;
+          end else index <= index - 1;
+        end
+        SEND_FRAME_ACK: begin
+          state <= STOP;
+
+          if (has_next_index) begin
+            frame_index <= next_frame_index;
+            state <= RECV_FRAME;
           end
+        end
 
-          SEND_ADDR: begin
-            if (index == 0) begin
-              state <= SEND_CMD;
-              index <= 7;
-            end else index <= index - 1;
+        SEND_FRAME: begin
+          if (index == 0) begin
+            state <= RECV_FRAME_ACK;
+            index <= 7;
+          end else index <= index - 1;
+        end
+        RECV_FRAME_ACK: begin
+          state <= STOP;
+
+          if (has_next_index) begin
+            frame_index <= next_frame_index;
+            state <= SEND_FRAME;
           end
+        end
+      endcase
+    end
+  end
 
-          SEND_CMD: state <= RECV_CMD_ACK;
-          RECV_CMD_ACK: begin
-            if (write) state <= SEND_FRAME;
-            else state <= RECV_FRAME;
-
-            if (mask[3] == 1) frame_index <= 3;
-            else if (mask[2] == 1) frame_index <= 2;
-            else if (mask[1] == 1) frame_index <= 1;
-            else frame_index <= 0;
-          end
-
-          RECV_FRAME: begin
-            if (index == 0) begin
-              state <= SEND_FRAME_ACK;
-              index <= 7;
-            end else index <= index - 1;
-
-            data_out[frame_index*8+index] <= sda_i;
-          end
-          SEND_FRAME_ACK: state <= STOP1;
-
-          SEND_FRAME: begin
-            if (index == 0) begin
-              state <= RECV_FRAME_ACK;
-              index <= 7;
-            end else index <= index - 1;
-          end
-          RECV_FRAME_ACK: begin
-            state <= STOP1;
-            if (frame_index == 3) begin
-
-              if (mask[2] == 1) begin
-                frame_index <= 2;
-                state <= SEND_FRAME;
-              end else if (mask[1] == 1) begin
-                frame_index <= 1;
-                state <= SEND_FRAME;
-              end else if (mask[0] == 1) begin
-                frame_index <= 0;
-                state <= SEND_FRAME;
-              end
-
-            end else if (frame_index == 2) begin
-
-              if (mask[1] == 1) begin
-                frame_index <= 1;
-                state <= SEND_FRAME;
-              end else if (mask[0] == 1) begin
-                frame_index <= 0;
-                state <= SEND_FRAME;
-              end
-
-            end else if (frame_index == 1) begin
-              if (mask[0] == 1) begin
-                frame_index <= 0;
-                state <= SEND_FRAME;
-              end
-            end
-          end
-
-          STOP1: state <= STOP2;
-          STOP2: state <= END;
-          END:   state <= END;
-        endcase
-      end
+  always_ff @(posedge clk) begin
+    if (command_trigger) begin
+      case (state)
+        START: acks <= 5'b11111;
+        RECV_CMD_ACK: acks[4] <= sda_i_sync1;
+        RECV_FRAME_ACK: acks[frame_index] <= sda_i_sync1;
+      endcase
     end
   end
 
   always_comb begin
-    sda_oe = 1;
-    // sda_tmp = 1;
-    sda_o = 1;
-    busy = 1;
-    scl = 0;
-    valid = 0;
+    has_next_index   = 0;
+    next_frame_index = 3;
 
-    if (signal_stage == 1 || signal_stage == 2) scl = 1;
-
-    frame = data_in[frame_index*8+:8];
-
-    unique case (state)
-      // Initial stuff
-      START1: begin  // First action of start condition
-        sda_o = 0;
-        scl   = 1;
+    case (frame_index)
+      3: begin
+        if (mask[2] == 1) begin
+          next_frame_index = 2;
+          has_next_index   = 1;
+        end else if (mask[1] == 1) begin
+          next_frame_index = 1;
+          has_next_index   = 1;
+        end else if (mask[0] == 1) begin
+          next_frame_index = 0;
+          has_next_index   = 1;
+        end
       end
-      START2: begin  // Second action of start condition
+
+      2: begin
+        if (mask[1] == 1) begin
+          next_frame_index = 1;
+          has_next_index   = 1;
+        end else if (mask[0] == 1) begin
+          next_frame_index = 0;
+          has_next_index   = 1;
+        end
+      end
+
+      1: begin
+        if (mask[0] == 1) begin
+          next_frame_index = 0;
+          has_next_index   = 1;
+        end
+      end
+    endcase
+  end
+
+  always_comb begin
+    sda_oe = 1;
+    sda_o  = 1;
+    busy   = 1;
+    valid  = 0;
+
+    frame  = data_in[frame_index*8+:8];
+
+    case (state)
+      START: begin
         sda_o = 0;
-        scl   = 0;
       end
 
       SEND_ADDR: sda_o = device_addr[index];
       SEND_CMD:  sda_o = ~write;  // 0: write, 1: read
       RECV_CMD_ACK: begin
-        // ack = sda;
         sda_oe = 0;
       end
 
       RECV_FRAME: begin
         sda_oe = 0;
       end
-      SEND_FRAME_ACK: sda_o = 1;
+      SEND_FRAME_ACK: sda_o = 0;
 
       SEND_FRAME: sda_o = frame[index];
       RECV_FRAME_ACK: begin
-        // ack = sda;
         sda_oe = 0;
       end
 
       // Final stuff
-      STOP1: begin  // First action of stop condition
-        scl   = 1;
+      STOP: begin
         sda_o = 0;
-      end
-      STOP2: begin  // Second action of stop condition
-        scl   = 1;
-        sda_o = 1;
       end
 
       RESET, END: begin
-        scl  = 1;
         busy = 0;
       end
     endcase
   end
-
-  // assign sda = (tristate_en) ? sda_tmp : 1'bZ;
 
 endmodule

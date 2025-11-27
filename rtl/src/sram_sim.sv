@@ -9,7 +9,7 @@ module sram_sim #(
     output logic so
 );
 
-  typedef logic [7:0] mem_t[2**24];
+  typedef logic [7:0] mem_t[2**23];
 
   // TODO: remove when finished
   logic [31:0] mem40;
@@ -75,10 +75,10 @@ module sram_sim #(
             case (command_reg)
               SPI_READ_CMD: begin
                 state <= SEND_DATA;
-                dataout_reg[31:24] <= mem[{addr_reg[23:1], si}];
-                dataout_reg[23:16] <= mem[{addr_reg[23:1], si}+1];
-                dataout_reg[15:8] <= mem[{addr_reg[23:1], si}+2];
-                dataout_reg[7:0] <= mem[{addr_reg[23:1], si}+3];
+                dataout_reg[31:24] <= mem[{addr_reg[22:1], si}];
+                dataout_reg[23:16] <= mem[{addr_reg[22:1], si}+1];
+                dataout_reg[15:8] <= mem[{addr_reg[22:1], si}+2];
+                dataout_reg[7:0] <= mem[{addr_reg[22:1], si}+3];
               end
               SPI_WRITE_CMD: begin
                 state <= RECV_DATA;
@@ -103,7 +103,7 @@ module sram_sim #(
         RECV_DATA: begin
           if (index == 0) begin
             // state <= END;
-            mem[addr_reg] <= {datain_reg[7:1], si};
+            mem[addr_reg[22:0]] <= {datain_reg[7:1], si};
             index <= 7;
             addr_reg <= addr_reg + 1;
           end else index <= index - 1;

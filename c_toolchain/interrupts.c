@@ -1,10 +1,11 @@
 #include "interrupts.h"
 #include "csr.h"
+#include "mmio.h"
 #include "printf.h"
 
 __attribute__((weak)) void exception_handler() {
-  uint32_t mepc = mepc_get();
   uint32_t mcause = mcause_get();
+  uint32_t mepc = mepc_get();
 
   switch (mcause) {
   case INSTRUCTION_ADDRESS_MISALIGNED:

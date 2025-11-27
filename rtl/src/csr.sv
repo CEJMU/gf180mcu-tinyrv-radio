@@ -17,14 +17,15 @@ module csr (
     input  logic        write_en,
     output logic [31:0] data_out,
 
-    input  logic [15:0] pc,
-    output logic [15:0] isr_return,
-    output logic [15:0] isr_target
+    input  logic [22:0] pc,
+    output logic [22:0] isr_return,
+    output logic [22:0] isr_target
 );
 
   logic intr_ext_sync;
   logic timer_interrupt;
   logic external_interrupt;
+  logic uart_interrupt;
 
   localparam byte TIMER = 7;
   localparam byte EXTERNAL = 11;
@@ -42,7 +43,7 @@ module csr (
   assign uart_interrupt = mstatus[3] && mie[UART] && mip[UART];
   assign interrupt_pending = timer_interrupt || external_interrupt || uart_interrupt;
 
-  assign isr_return = mepc[15:0];
+  assign isr_return = mepc[22:0];
 
   always_ff @(posedge clk) begin
     intr_ext_sync <= intr_ext;
@@ -52,7 +53,7 @@ module csr (
     if (uart_rx_valid) mip[UART] <= 1;
 
     if (enter_isr) begin
-      mepc <= {16'b0, pc};
+      mepc <= {19'b0, pc};
       mstatus[3] <= 0;
       if (mcause == {1'b1, 31'd11}) mip[EXTERNAL] <= 0;
     end

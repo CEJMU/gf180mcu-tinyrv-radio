@@ -100,16 +100,16 @@ module alu (
         default: begin
           case (opcode)
             OP_JAL: begin
-              rd[31:18] = '0;
-              rd[15:0]  = '0;
-              rd[17:16] = 2'b00;
+              rd[31:25] = '0;
+              rd[22:0]  = '0;
+              rd[24:23] = 2'b00;
             end
 
             OP_JALR: begin
-              rd[31:18] = '0;
-              rd[15:1]  = jalr_temp[15:1];
+              rd[31:25] = '0;
+              rd[22:1]  = jalr_temp[22:1];
               rd[0]     = 1'b0;
-              rd[17:16] = 2'b01;
+              rd[24:23] = 2'b01;
             end
 
             OP_LUI: begin
@@ -127,17 +127,17 @@ module alu (
             end
 
             OP_BRANCH: begin
-              rd[31:18] = '0;
-              rd[15:0]  = '0;
+              rd[31:25] = '0;
+              rd[22:0]  = '0;
               case (funct3)
                 // Checking condition and setting jump[1] and jump[0] for corresponding
                 // instructioncounter command (indirect, direct, increment)
-                FUNCT3_BEQ: rd[17:16] = (a == b) ? 2'b00 : 2'b10;
-                FUNCT3_BNE: rd[17:16] = (a == b) ? 2'b10 : 2'b00;
-                FUNCT3_BLT: rd[17:16] = ($signed(a) < $signed(b)) ? 2'b00 : 2'b10;
-                FUNCT3_BGE: rd[17:16] = ($signed(a) >= $signed(b)) ? 2'b00 : 2'b10;
-                FUNCT3_BLTU: rd[17:16] = ($unsigned(a) < $unsigned(b)) ? 2'b00 : 2'b10;
-                FUNCT3_BGEU: rd[17:16] = ($unsigned(a) >= $unsigned(b)) ? 2'b00 : 2'b10;
+                FUNCT3_BEQ: rd[24:23] = (a == b) ? 2'b00 : 2'b10;
+                FUNCT3_BNE: rd[24:23] = (a == b) ? 2'b10 : 2'b00;
+                FUNCT3_BLT: rd[24:23] = ($signed(a) < $signed(b)) ? 2'b00 : 2'b10;
+                FUNCT3_BGE: rd[24:23] = ($signed(a) >= $signed(b)) ? 2'b00 : 2'b10;
+                FUNCT3_BLTU: rd[24:23] = ($unsigned(a) < $unsigned(b)) ? 2'b00 : 2'b10;
+                FUNCT3_BGEU: rd[24:23] = ($unsigned(a) >= $unsigned(b)) ? 2'b00 : 2'b10;
                 default: begin
                     rd = '0;
                     illegal_instruction = 1;

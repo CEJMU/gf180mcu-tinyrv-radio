@@ -25,17 +25,53 @@ uint32_t compute_osr_fc(double frequency, uint8_t OSR);
 void start_transmission();
 void end_transmission();
 
+uint32_t read_string(char *buf, int len) {
+  uart_rx_enable();
+  uart_interrupt_disable();
+  uart_interrupt_clear();
+
+  int i;
+  for (i = 0; i < len - 1; i++) {
+    while (!uart_interrupt_pending()) {
+      // Idle
+    }
+    buf[i] = uart_data_read();
+    uart_interrupt_clear();
+
+    if (buf[i] == 0x0D) {
+      buf[i] = '\0';
+      return i;
+    }
+  }
+
+  buf[i + 1] = '\0';
+  return i + 1;
+}
+
 int main() {
+  scl_ratio_set(scl_compute_ratio(12e6, 100e3));
+  *I2C_DEVICE_ADDR = 0x5A;
+  *I2C_MASK = 1;
+  *I2C_DATA = 0x20;
+  uint8_t result = *I2C_DATA;
+  printf("Returned: %x\r\n", result);
+
+  while (1) {
+  }
+
   uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
   uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-
-  printf("Hello\r\n");
   interrupts_disable();
   mtvec_set_table(&mtvec_table);
 
-  uart_rx_enable();
-  uart_interrupt_enable();
-  interrupts_enable();
+  char buf[10];
+  printf("Hallo: ");
+  int len = read_string(buf, 10);
+  printf("len: %d\r\n", len);
+  printf("Got: %s\r\n", buf);
+  /* uart_rx_enable(); */
+  /* uart_interrupt_enable(); */
+  /* interrupts_enable(); */
 
   while (1) {
   };

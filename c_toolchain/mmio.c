@@ -23,6 +23,7 @@ volatile uint8_t *const UART_RX_DATA = (uint8_t *)(GPIO_OUT + 34);
 
 volatile uint16_t *const UART_RX_CPB = (uint16_t *)(GPIO_OUT + 36);
 volatile uint16_t *const UART_TX_CPB = (uint16_t *)(GPIO_OUT + 40);
+volatile uint16_t *const SCL_RATIO = (uint16_t *)(GPIO_OUT + 44);
 
 void freq_reset_n_set(uint8_t reset_n) {
   uint8_t status = *FREQ_STATUS;
@@ -52,6 +53,11 @@ void freq_lo_div_set(uint8_t lo_div) { *FREQ_LO_DIV = lo_div; }
 
 char uart_data_read() { return *UART_RX_DATA; }
 
+uint8_t uart_data_valid() {
+  uint8_t current_status = *UART_RX_STATUS;
+  return current_status & 0x04;
+}
+
 void uart_rx_enable() {
   uint8_t current_status = *UART_RX_STATUS;
   current_status |= 0x01;
@@ -73,3 +79,11 @@ uint16_t uart_compute_cpb(uint32_t freq_ns, uint32_t baud) {
 void uart_rx_set_cpb(uint16_t cpb) { *UART_RX_CPB = cpb; }
 
 void uart_tx_set_cpb(uint16_t cpb) { *UART_TX_CPB = cpb; }
+
+uint16_t scl_compute_ratio(uint32_t freq_ns, uint32_t scl_ns) {
+  double ratio = (double)freq_ns / scl_ns;
+  ratio = ratio / 2;
+  return (uint16_t)ratio;
+}
+
+void scl_ratio_set(uint16_t scl_ratio) { *SCL_RATIO = scl_ratio; }

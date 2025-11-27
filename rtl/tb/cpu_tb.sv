@@ -24,8 +24,8 @@ module cpu_tb ();
   );
 
   sram_sim #(
-      .INIT_FILE("../c_toolchain/build/demo.txt")
-      // .INIT_FILE("../asm/misc/fib.txt")
+      // .INIT_FILE("../c_toolchain/build/demo.txt")
+      .INIT_FILE("../asm/misc/i2cce.txt")
   ) sram (
       .sclk(sclk),
       .reset(reset),
