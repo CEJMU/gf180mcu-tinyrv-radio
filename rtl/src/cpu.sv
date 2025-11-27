@@ -39,8 +39,6 @@ module cpu #(
 `ifndef SIM
 `ifdef FPGA
   `include "constants.sv"
-`else
-  `include "rtl/constants.sv"
 `endif
 `endif
 
@@ -53,7 +51,7 @@ module cpu #(
 
   logic mem_ce, memwrite, mem_busy, mem_valid;
   logic [31:0] mem_addr;
-  logic [31:0] mem_datain, mem_dataout;
+  logic [31:0] mem_dataout;
 
   logic [31:0] iword, immediate;
   logic wbflag, memflag, pcflag, fetchflag;
@@ -66,20 +64,29 @@ module cpu #(
   logic [31:0] a, b, rd;
   logic [16:0] instruction;
 
-  logic        regwrite;
   logic [31:0] rd_alu, rs1, rs2, alu_comb;
 
   always_ff @(posedge clk) begin
     rd_alu <= alu_comb;
 
     if (fetchflag) iword <= mem_dataout;
-    if (reset == 0) iword <= 0;
+    if (reset == 0) begin
+      iword  <= 0;
+      rd_alu <= 0;
+    end
   end
 
   logic       intr_timer;
   logic       load_access_fault;
   logic [2:0] funct3;
   logic       uart_rx_valid;
+
+  logic [7:0] gpio_out_full;
+  assign gpio_out = gpio_out_full[3:0];
+
+  wire _unused;
+  assign _unused = &{control_flags[2], gpio_out_full[7:4]};
+
   memory #(
       .CLK_FREQ(CLK_FREQ),
       .BAUD(BAUD)
@@ -105,8 +112,8 @@ module cpu #(
       .sda_i(sda_i),
       .sda_o(sda_o),
       .sda_oe(sda_oe),
-      .gpio_in(gpio_in),
-      .gpio_out(gpio_out),
+      .gpio_in({4'b0, gpio_in}),
+      .gpio_out(gpio_out_full),
       .cos_ds(cos_ds),
       .cos_ds_n(cos_ds_n),
       .sin_ds(sin_ds),
@@ -131,7 +138,6 @@ module cpu #(
 
   logic       jump_to_isr;
   logic       mret;
-  logic       interrupt_clear;
   logic       interrupt_pending;
   logic       csr_write;
   logic [2:0] exceptions;
@@ -223,7 +229,7 @@ module cpu #(
   always_comb begin
     rd = rd_alu;
 
-    if (iword[6:0] == OP_JALR || iword[6:0] == OP_JAL) rd = pc_new + 4;
+    if (iword[6:0] == OP_JALR || iword[6:0] == OP_JAL) rd = {9'b0, pc_new} + 4;
     else if (iword[6:0] == OP_CSR && iword[14:12] == FUNCT3_CSRR) rd = csr_dataout;
     else if (control_flags[0]) rd = mem_dataout;
   end

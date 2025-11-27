@@ -59,6 +59,7 @@ module chip_core #(
       .sclk(bidir_out[1]),
       .sram_ce(bidir_out[2]),
       .tx(bidir_out[3]),
+      .rx(input_in[7]),
       .gpio_out(bidir_out[7:4]),
 
       .scl(bidir_out[8]),

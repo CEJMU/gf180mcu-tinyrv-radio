@@ -108,7 +108,7 @@ module lo_gen (
 	end
 
 	// DIV=1: LO I phase acts on rising edge
-  	always @(posedge i_clk or negedge i_rst_n) begin
+  	always @(posedge i_clk) begin
 		if (!i_rst_n) begin
 			lo_i_r <= 1'b0;
 			lo_ctr_r <= 4'b0;
@@ -121,7 +121,7 @@ module lo_gen (
 	end
 
 	// DIV=1: LO Q phase acts on falling edge, but always follows I
-	always @(negedge i_clk or negedge i_rst_n) begin
+	always @(negedge i_clk) begin
 		if (!i_rst_n) begin
 			lo_q_r <= 1'b0;
 		end else begin

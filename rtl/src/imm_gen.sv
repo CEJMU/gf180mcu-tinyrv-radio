@@ -6,8 +6,6 @@ module imm_gen (
 `ifndef SIM
   `ifdef FPGA
     `include "constants.sv"
-  `else
-    `include "rtl/constants.sv"
   `endif
 `endif
 

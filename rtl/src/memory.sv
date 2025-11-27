@@ -67,8 +67,6 @@ module memory #(
 `ifndef SIM
 `ifdef FPGA
   `include "constants.sv"
-`else
-  `include "rtl/constants.sv"
 `endif
 `endif
 
@@ -125,8 +123,8 @@ module memory #(
     TFAULT
   } target_t;
 
-  states_t        state = IDLE;
-  target_t        target = SRAM;
+  states_t        state;
+  target_t        target;
 
   logic    [63:0] mtime;
   logic    [63:0] mtimecmp;
@@ -135,8 +133,8 @@ module memory #(
   logic    [31:0] datain_reg;
   logic           memwrite_reg;
 
-  logic master_reset, master_busy, master_valid;
-  logic sram_reset, sram_busy, sram_valid;
+  logic master_reset, master_busy;
+  logic sram_busy, sram_valid;
   logic i2c_reset, i2c_busy, i2c_valid;
   logic [6:0] i2c_addr;
   logic [3:0] i2c_mask;
@@ -170,7 +168,7 @@ module memory #(
 
   logic [4:0] i2c_acks;
   localparam TARGET = 100_000;  // Hz
-  localparam [15:0] SCL_RATIO_DEFAULT = (CLK_FREQ / TARGET) / 2;
+  localparam SCL_RATIO_DEFAULT = (CLK_FREQ / TARGET) / 2;
   logic [15:0] scl_ratio;
   i2c_master i2c_master (
       .clk(clk),
@@ -197,10 +195,7 @@ module memory #(
   logic uart_tx_en;
   logic [15:0] uart_tx_cpb;
 
-  uart_tx #(
-      .CLK_FREQ(CLK_FREQ),
-      .BAUD(BAUD)
-  ) uart_transmitter (
+  uart_tx uart_transmitter (
       .clk(clk),
       .resetn(reset),
       .uart_txd(tx),
@@ -214,10 +209,7 @@ module memory #(
   logic [ 7:0] uart_rx_data;
   logic [15:0] uart_rx_cpb;
   assign uart_rx_valid = uart_rx_status[2];
-  uart_rx #(
-      .CLK_FREQ(CLK_FREQ),
-      .BAUD(BAUD)
-  ) uart_receiver (
+  uart_rx uart_receiver (
       .clk(clk),
       .resetn(reset),
       .uart_rxd(rx),
@@ -268,7 +260,10 @@ module memory #(
       uart_rx_status[0] <= 1'b0;
       uart_tx_cpb <= CYCLES_PER_BIT_DEFAULT;
       uart_rx_cpb <= CYCLES_PER_BIT_DEFAULT;
-      scl_ratio <= SCL_RATIO_DEFAULT;
+      scl_ratio <= SCL_RATIO_DEFAULT[15:0];
+      sclk_flag <= 0;
+      state <= IDLE;
+      target <= SRAM;
     end else if (ce) begin
       state <= IDLE;
       uart_tx_en <= 0;
@@ -285,7 +280,7 @@ module memory #(
           target <= TFAULT;
 
           // == SRAM ==================================
-          if (addr >= SRAM_LOW_ADDR && addr <= SRAM_HIGH_ADDR) begin
+          if (  /* addr >= SRAM_LOW_ADDR && */ addr <= SRAM_HIGH_ADDR) begin
             target <= SRAM;
             datain_reg <= {datain[7:0], datain[15:8], datain[23:16], datain[31:24]};
 
@@ -427,12 +422,10 @@ module memory #(
   always_comb begin
     master_dataout = sram_dataout;
     master_busy = sram_busy;
-    master_valid = sram_valid;
 
     if (target == I2C) begin
       master_dataout = i2c_dataout;
       master_busy = i2c_busy;
-      master_valid = i2c_valid;
     end else if (target == UART) begin
       master_busy = uart_tx_busy;
     end

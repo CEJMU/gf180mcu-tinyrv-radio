@@ -42,9 +42,6 @@ localparam logic [2:0] FUNCT3_SRL = 3'b101;
 localparam logic [6:0] FUNCT7_SLL = 7'b0000000;
 localparam logic [2:0] FUNCT3_SLL = 3'b001;
 
-localparam logic [6:0] FUNCT7_MUL = 7'b0000001;
-localparam logic [2:0] FUNCT3_MUL = 3'b000;
-
 // Funct3 for most immediate instructions
 localparam logic [2:0] FUNCT3_ADDI = 3'b000;
 localparam logic [2:0] FUNCT3_ANDI = 3'b111;

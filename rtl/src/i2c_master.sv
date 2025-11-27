@@ -39,25 +39,24 @@ module i2c_master (
     END
   } states_t;
 
-  states_t        state = RESET;
+  states_t        state;
 
   logic           scl_reg;
   logic           scl_trigger;
   logic           data_trigger;
   logic           command_trigger;
 
-  logic    [31:0] scl_counter = 0;
+  logic    [15:0] scl_counter;
 
-  logic    [ 1:0] frame_index = 3;
-  logic    [ 1:0] next_frame_index = 3;
+  logic    [ 1:0] frame_index;
+  logic    [ 1:0] next_frame_index;
   logic           has_next_index;
-  logic           send_cmd = 1;
   logic    [ 7:0] frame;
 
   logic           sda_i_sync0;
   logic           sda_i_sync1;
 
-  byte            index;
+  logic    [ 2:0] index;
 
   always_ff @(posedge clk) begin : scl_trigger_gen
     sda_i_sync0 <= sda_i;
@@ -83,13 +82,6 @@ module i2c_master (
 
   // Posedge of scl. State transistions
   always_ff @(posedge clk) begin
-    if (reset) begin
-      state <= RESET;
-      scl_reg <= 1;
-
-      send_cmd <= 1;
-    end
-
     if (scl_trigger) begin
       scl_reg <= ~scl_reg;
     end
@@ -159,6 +151,12 @@ module i2c_master (
         end
       endcase
     end
+
+    if (reset) begin
+      state <= RESET;
+      scl_reg <= 1;
+      frame_index <= 3;
+    end
   end
 
   always_ff @(posedge clk) begin
@@ -166,7 +164,7 @@ module i2c_master (
       case (state)
         START: acks <= 5'b11111;
         RECV_CMD_ACK: acks[4] <= sda_i_sync1;
-        RECV_FRAME_ACK: acks[frame_index] <= sda_i_sync1;
+        RECV_FRAME_ACK: acks[{1'b0, frame_index}] <= sda_i_sync1;
       endcase
     end
   end

@@ -37,8 +37,8 @@ module spi_master (
   // of the SRAM. Changing read/write during operation will corrupt the state
   logic    write_reg;
 
-  localparam [7:0] SPI_WRITE_CMD = 8'h02;
-  localparam [7:0] SPI_READ_CMD = 8'h03;
+  localparam logic [7:0] SPI_WRITE_CMD = 8'h02;
+  localparam logic [7:0] SPI_READ_CMD = 8'h03;
 
   byte  index;
   byte  end_index;
@@ -111,11 +111,11 @@ module spi_master (
     end
     else if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
       case (state)
-        SEND_COMMAND: si <= (write_reg) ? SPI_WRITE_CMD[index] : SPI_READ_CMD[index];
+        SEND_COMMAND: si <= (write_reg) ? SPI_WRITE_CMD[index[2:0]] : SPI_READ_CMD[index[2:0]];
 
-        SEND_ADDR: si <= addr[index];
-        RECV_DATA: data_out[index] <= so;
-        SEND_DATA: si <= data_in[index];
+        SEND_ADDR: si <= addr[index[4:0]];
+        RECV_DATA: data_out[index[4:0]] <= so;
+        SEND_DATA: si <= data_in[index[4:0]];
       endcase
     end
   end

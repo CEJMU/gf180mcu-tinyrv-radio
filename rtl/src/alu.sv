@@ -10,22 +10,18 @@ module alu (
 `ifndef SIM
   `ifdef FPGA
     `include "constants.sv"
-  `else
-    `include "rtl/constants.sv"
   `endif
 `endif
 
-  logic [6:0] opcode;
-  logic [6:0] funct7;
-  logic [2:0] funct3;
-  logic [63:0] mulResult;
+  wire [6:0] opcode;
+  wire [6:0] funct7;
+  wire [2:0] funct3;
   logic [31:0] jalr_temp;
 
   // Concatenated slices of the iword. Used for selecting correct operation
   assign opcode  = instruction[6:0];
   assign funct7  = instruction[16:10];
   assign funct3  = instruction[9:7];
-  assign mulResult = $signed(a) * $signed(b);
   assign jalr_temp = a + b;
 
 

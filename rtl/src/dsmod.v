@@ -146,7 +146,7 @@ module dsmod #(
 		endcase
 	end
 
-  	always @(posedge i_clk or negedge i_rst_n) begin
+  	always @(posedge i_clk) begin
 		if (!i_rst_n) begin
 			// reset all registers
 			accu1_r <= {(NBIT+2+8){1'b0}};

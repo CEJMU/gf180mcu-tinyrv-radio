@@ -5,18 +5,15 @@
 // - UART reciever module.
 //
 
-module uart_rx #(
-    parameter CLK_FREQ = 12_000_000,
-    parameter BAUD = 115_200
-) (
-    input  wire                    clk,            // Top level system clock input.
-    input  wire                    resetn,         // Asynchronous active low reset.
-    input  wire                    uart_rxd,       // UART Recieve pin.
-    input  wire                    uart_rx_en,     // Recieve enable
-    output wire                    uart_rx_break,  // Did we get a BREAK message?
-    output wire                    uart_rx_valid,  // Valid data recieved and available.
-    output reg  [7:0] uart_rx_data,    // The recieved data.
-    input wire [15:0] CYCLES_PER_BIT
+module uart_rx (
+    input  wire        clk,            // Top level system clock input.
+    input  wire        resetn,         // Asynchronous active low reset.
+    input  wire        uart_rxd,       // UART Recieve pin.
+    input  wire        uart_rx_en,     // Recieve enable
+    output wire        uart_rx_break,  // Did we get a BREAK message?
+    output wire        uart_rx_valid,  // Valid data recieved and available.
+    output reg  [ 7:0] uart_rx_data,   // The recieved data.
+    input  wire [15:0] CYCLES_PER_BIT
 );
 
   // ---------------------------------------------------------------------------
@@ -37,7 +34,7 @@ module uart_rx #(
 
   //
   // Number of stop bits indicating the end of a packet.
-  localparam STOP_BITS = 1;
+  // localparam STOP_BITS = 1;
 
   // --------------------------------------------------------------------------
   // Internal parameters.
@@ -109,7 +106,7 @@ module uart_rx #(
 
   wire next_bit     = cycle_counter == CYCLES_PER_BIT ||
                         fsm_state       == FSM_STOP &&
-                        cycle_counter   == {1'b0, CYCLES_PER_BIT};
+                        cycle_counter   == {1'b0, CYCLES_PER_BIT[14:0]};
   wire payload_done = bit_counter == PAYLOAD_BITS;
 
   //
@@ -130,7 +127,7 @@ module uart_rx #(
 
   //
   // Handle updates to the recieved data register.
-  integer i = 0;
+  integer i;
   always @(posedge clk) begin : p_recieved_data
     if (!resetn) begin
       recieved_data <= {PAYLOAD_BITS{1'b0}};
@@ -144,6 +141,7 @@ module uart_rx #(
     end
   end
 
+  /* verilator lint_off WIDTHTRUNC */
   //
   // Increments the bit counter when recieving.
   always @(posedge clk) begin : p_bit_counter
@@ -155,13 +153,14 @@ module uart_rx #(
       bit_counter <= bit_counter + 1'b1;
     end
   end
+  /* verilator lint_on WIDTHTRUNC */
 
   //
   // Sample the recieved bit when in the middle of a bit frame.
   always @(posedge clk) begin : p_bit_sample
     if (!resetn) begin
       bit_sample <= 1'b0;
-    end else if (cycle_counter == {1'b0, CYCLES_PER_BIT}) begin
+    end else if (cycle_counter == {1'b0, CYCLES_PER_BIT[14:0]}) begin
       bit_sample <= rxd_reg;
     end
   end

@@ -5,17 +5,14 @@
 // - UART transmitter module.
 //
 
-module uart_tx #(
-    parameter CLK_FREQ = 12_000_000,
-    parameter BAUD = 115_200
-) (
-    input  wire       clk,           // Top level system clock input.
-    input  wire       resetn,        // Asynchronous active low reset.
-    output wire       uart_txd,      // UART transmit pin.
-    output wire       uart_tx_busy,  // Module busy sending previous item.
-    input  wire       uart_tx_en,    // Send the data on uart_tx_data
-    input  wire [7:0] uart_tx_data,   // The data to be sent
-    input wire [15:0] CYCLES_PER_BIT
+module uart_tx (
+    input  wire        clk,            // Top level system clock input.
+    input  wire        resetn,         // Asynchronous active low reset.
+    output wire        uart_txd,       // UART transmit pin.
+    output wire        uart_tx_busy,   // Module busy sending previous item.
+    input  wire        uart_tx_en,     // Send the data on uart_tx_data
+    input  wire [ 7:0] uart_tx_data,   // The data to be sent
+    input  wire [15:0] CYCLES_PER_BIT
 );
 
   // --------------------------------------------------------------------------- 
@@ -114,7 +111,7 @@ module uart_tx #(
 
   //
   // Handle updates to the sent data register.
-  integer i = 0;
+  integer i;
   always @(posedge clk) begin : p_data_to_send
     if (!resetn) begin
       data_to_send <= {PAYLOAD_BITS{1'b0}};
@@ -128,6 +125,7 @@ module uart_tx #(
   end
 
 
+  /* verilator lint_off WIDTHTRUNC */
   //
   // Increments the bit counter each time a new bit frame is sent.
   always @(posedge clk) begin : p_bit_counter
@@ -143,6 +141,7 @@ module uart_tx #(
       bit_counter <= bit_counter + 1'b1;
     end
   end
+  /* verilator lint_on WIDTHTRUNC */
 
 
   //

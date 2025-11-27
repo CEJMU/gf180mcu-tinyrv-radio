@@ -49,15 +49,15 @@ uint32_t read_string(char *buf, int len) {
 }
 
 int main() {
-  scl_ratio_set(scl_compute_ratio(12e6, 100e3));
-  *I2C_DEVICE_ADDR = 0x5A;
-  *I2C_MASK = 1;
-  *I2C_DATA = 0x20;
-  uint8_t result = *I2C_DATA;
-  printf("Returned: %x\r\n", result);
+  /* scl_ratio_set(scl_compute_ratio(12e6, 100e3)); */
+  /* *I2C_DEVICE_ADDR = 0x5A; */
+  /* *I2C_MASK = 1; */
+  /* *I2C_DATA = 0x20; */
+  /* uint8_t result = *I2C_DATA; */
+  /* printf("Returned: %x\r\n", result); */
 
-  while (1) {
-  }
+  /* while (1) { */
+  /* } */
 
   uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
   uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));

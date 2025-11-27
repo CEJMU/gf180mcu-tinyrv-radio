@@ -21,11 +21,9 @@ module control (
 );
 
 `ifndef SIM
-  `ifdef FPGA
-    `include "constants.sv"
-  `else
-    `include "rtl/constants.sv"
-  `endif
+`ifdef FPGA
+  `include "constants.sv"
+`endif
 `endif
 
   // NOTE for docs:
@@ -140,10 +138,17 @@ module control (
     endcase
   end
 
+  logic [31:0] imm_out;
   imm_gen imm_gen_i (
       .iword(iword),
-      .immediate(immediate)
+      .immediate(imm_out)
   );
+
+  always_ff @(posedge clk) begin
+    immediate <= imm_out;
+
+    if (reset == 0) immediate <= 32'b0;
+  end
 
   // Flags for control flow
   always_comb begin

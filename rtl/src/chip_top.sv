@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // TODO: I2C pullups direkt hier definieren?
-// TODO: I2C master mal gescheit machen
-// TODO: I2C master counter programmierbar machen
+// DONE: I2C master mal gescheit machen
+// DONE: I2C master counter programmierbar machen
 // TODO: Schmitt Trigger???
 // DONE: UART receiver mit interrupts
 // DONE: UART baud programmierbar machen
 // TODO: Basys3 Test
 // TODO: CE Logo in Ecke
+// TODO: default werte loswerden
 `default_nettype none
 
 module chip_top #(
@@ -17,7 +18,7 @@ module chip_top #(
     parameter NUM_DVSS_PADS = 10,
 
     // Signal pads
-    parameter NUM_INPUT_PADS = 7,
+    parameter NUM_INPUT_PADS = 8,
     parameter NUM_BIDIR_PADS = 18,
     parameter NUM_ANALOG_PADS = 2
     )(

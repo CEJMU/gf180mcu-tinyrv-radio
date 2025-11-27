@@ -27,9 +27,11 @@ module csr (
   logic external_interrupt;
   logic uart_interrupt;
 
-  localparam byte TIMER = 7;
-  localparam byte EXTERNAL = 11;
-  localparam byte UART = 16;
+  logic [11:0] addr_reg;
+
+  localparam [4:0] TIMER = 7;
+  localparam [4:0] EXTERNAL = 11;
+  localparam [4:0] UART = 16;
 
   logic [31:0] mstatus;  // 0x300
   logic [31:0] mie;  // 0x304
@@ -46,6 +48,7 @@ module csr (
   assign isr_return = mepc[22:0];
 
   always_ff @(posedge clk) begin
+    addr_reg <= addr;
     intr_ext_sync <= intr_ext;
 
     mip[TIMER] <= intr_timer;
@@ -53,7 +56,7 @@ module csr (
     if (uart_rx_valid) mip[UART] <= 1;
 
     if (enter_isr) begin
-      mepc <= {19'b0, pc};
+      mepc <= {9'b0, pc};
       mstatus[3] <= 0;
       if (mcause == {1'b1, 31'd11}) mip[EXTERNAL] <= 0;
     end
@@ -62,16 +65,18 @@ module csr (
       mstatus[3] <= 1;
     end
 
+    /* verilator lint_off CASEINCOMPLETE */
     if (write_en) begin
-      case (addr)
-        32'h300: mstatus <= data_in;
-        32'h304: mie <= data_in;
-        32'h305: mtvec <= data_in;
-        32'h341: mepc <= data_in;
-        32'h342: mcause <= data_in;
-        32'h344: mip <= data_in;
+      case (addr_reg)
+        12'h300: mstatus <= data_in;
+        12'h304: mie <= data_in;
+        12'h305: mtvec <= data_in;
+        12'h341: mepc <= data_in;
+        12'h342: mcause <= data_in;
+        12'h344: mip <= data_in;
       endcase
     end
+    /* verilator lint_on CASEINCOMPLETE */
 
     if (external_interrupt) mcause <= {1'b1, 31'd11};
     else if (uart_interrupt) mcause <= {1'b1, 31'd16};
@@ -91,20 +96,24 @@ module csr (
     end
   end
 
+  /* verilator lint_off WIDTHEXPAND */
+  /* verilator lint_off WIDTHTRUNC */
   always_comb begin
     if (mcause[31]) isr_target = (mtvec[31:2] + mcause[30:0]) << 2;
     else isr_target = {mtvec[31:2], 2'b00};
 
-    case (addr)
-      32'h300: data_out = mstatus;
-      32'h304: data_out = mie;
-      32'h305: data_out = mtvec;
-      32'h341: data_out = mepc;
-      32'h342: data_out = mcause;
-      32'h344: data_out = mip;
+    case (addr_reg)
+      12'h300: data_out = mstatus;
+      12'h304: data_out = mie;
+      12'h305: data_out = mtvec;
+      12'h341: data_out = mepc;
+      12'h342: data_out = mcause;
+      12'h344: data_out = mip;
 
       default: data_out = 0;
     endcase
   end
+  /* verilator lint_on WIDTHEXPAND */
+  /* verilator lint_on WIDTHTRUNC */
 
 endmodule
