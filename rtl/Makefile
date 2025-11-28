@@ -57,7 +57,7 @@ flash_bitstream: $(FILE).bin
 
 convert: cpu.v
 cpu.v: src/cpu.sv $(MODULES_SYNTH)
-	yosys -DUSE_POWER_PINS -p 'hierarchy -top cpu; proc; write_verilog cpu.v;' src/cpu.sv $(MODULES_SYNTH)
+	yosys -DFPGA -p 'hierarchy -top cpu; proc; write_verilog cpu.v;' src/cpu.sv $(MODULES_SYNTH)
 
 all: simulation synthesis pr gen_bitstream flash_bitstream
 

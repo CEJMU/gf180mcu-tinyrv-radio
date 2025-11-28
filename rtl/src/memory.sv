@@ -258,6 +258,7 @@ module memory #(
       gpio_out <= 8'd0;
       gpio_in_sync <= 8'd0;
       uart_rx_status[0] <= 1'b0;
+      osr_fc_reg <= {2'b11, 30'b000001100111110101011101010101};
       uart_tx_cpb <= CYCLES_PER_BIT_DEFAULT;
       uart_rx_cpb <= CYCLES_PER_BIT_DEFAULT;
       scl_ratio <= SCL_RATIO_DEFAULT[15:0];

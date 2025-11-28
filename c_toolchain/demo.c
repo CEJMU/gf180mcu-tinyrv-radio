@@ -59,22 +59,22 @@ int main() {
   /* while (1) { */
   /* } */
 
-  uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-  uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+  /* uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200)); */
+  /* uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200)); */
   interrupts_disable();
   mtvec_set_table(&mtvec_table);
 
-  char buf[10];
-  printf("Hallo: ");
-  int len = read_string(buf, 10);
-  printf("len: %d\r\n", len);
-  printf("Got: %s\r\n", buf);
+  /* char buf[10]; */
+  /* printf("Hallo: "); */
+  /* int len = read_string(buf, 10); */
+  /* printf("len: %d\r\n", len); */
+  /* printf("Got: %s\r\n", buf); */
   /* uart_rx_enable(); */
   /* uart_interrupt_enable(); */
   /* interrupts_enable(); */
 
-  while (1) {
-  };
+  /* while (1) { */
+  /* }; */
 
   external_interrupt_enable();
 
@@ -128,7 +128,7 @@ void start_transmission() {
   freq_reset_n_set(0);
   freq_reset_n_set(1);
   freq_start_set(0);
-  freq_lo_div_set(4);
+  freq_lo_div_set(2);
   freq_osr_fc_set(f_c[symbols[current]]);
 
   mtimecmp_set(CYCLES_PER_SYMBOL);
