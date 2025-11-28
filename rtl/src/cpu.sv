@@ -84,8 +84,8 @@ module cpu #(
   logic [7:0] gpio_out_full;
   assign gpio_out = gpio_out_full[3:0];
 
-  wire _unused;
-  assign _unused = &{control_flags[2], gpio_out_full[7:4]};
+  // wire _unused;
+  // assign _unused = &{control_flags[2], gpio_out_full[7:4]};
 
   memory #(
       .CLK_FREQ(CLK_FREQ),
@@ -229,7 +229,7 @@ module cpu #(
   always_comb begin
     rd = rd_alu;
 
-    if (iword[6:0] == OP_JALR || iword[6:0] == OP_JAL) rd = {9'b0, pc_new} + 4;
+    if (iword[6:0] == OP_JALR || iword[6:0] == OP_JAL) rd = pc_new + 4;
     else if (iword[6:0] == OP_CSR && iword[14:12] == FUNCT3_CSRR) rd = csr_dataout;
     else if (control_flags[0]) rd = mem_dataout;
   end

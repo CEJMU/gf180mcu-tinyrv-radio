@@ -20,7 +20,7 @@ module regs (
   always_ff @(posedge clk) begin
     // Only perform write if control sets regwrite
     // and x0 isn't the target
-    if (regwrite && rdadr != 0) begin
+    if (reset && regwrite && rdadr != 0) begin
       registers[rdadr] <= rd;
     end
 

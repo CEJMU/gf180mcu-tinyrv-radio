@@ -159,15 +159,23 @@ module i2c_master (
     end
   end
 
+  logic cmd_ack;
+  logic [3:0] frame_acks;
   always_ff @(posedge clk) begin
     if (command_trigger) begin
       case (state)
-        START: acks <= 5'b11111;
-        RECV_CMD_ACK: acks[4] <= sda_i_sync1;
-        RECV_FRAME_ACK: acks[{1'b0, frame_index}] <= sda_i_sync1;
+        START: begin
+          frame_acks <= 4'b1111;
+          cmd_ack <= 1'b1;
+        end
+
+        RECV_CMD_ACK:   cmd_ack <= sda_i_sync1;
+        RECV_FRAME_ACK: frame_acks[frame_index] <= sda_i_sync1;
       endcase
     end
   end
+
+  assign acks = {cmd_ack, frame_acks};
 
   always_comb begin
     has_next_index   = 0;

@@ -280,7 +280,7 @@ module memory #(
           target <= TFAULT;
 
           // == SRAM ==================================
-          if (  /* addr >= SRAM_LOW_ADDR && */ addr <= SRAM_HIGH_ADDR) begin
+          if (addr >= SRAM_LOW_ADDR && addr <= SRAM_HIGH_ADDR) begin
             target <= SRAM;
             datain_reg <= {datain[7:0], datain[15:8], datain[23:16], datain[31:24]};
 
