@@ -12,15 +12,17 @@
 // TODO: default werte loswerden
 `default_nettype none
 
+`include "slot_defines.svh"
+
 module chip_top #(
     // Power/ground pads for core and I/O
-    parameter NUM_DVDD_PADS = 8,
-    parameter NUM_DVSS_PADS = 10,
+    parameter NUM_DVDD_PADS = `NUM_DVDD_PADS,
+    parameter NUM_DVSS_PADS = `NUM_DVSS_PADS,
 
     // Signal pads
-    parameter NUM_INPUT_PADS = 8,
-    parameter NUM_BIDIR_PADS = 18,
-    parameter NUM_ANALOG_PADS = 2
+    parameter NUM_INPUT_PADS = `NUM_INPUT_PADS, // 8
+    parameter NUM_BIDIR_PADS = `NUM_BIDIR_PADS, // 18
+    parameter NUM_ANALOG_PADS = `NUM_ANALOG_PADS // 0 wenn möglich
     )(
     `ifdef USE_POWER_PINS
     inout  wire VDD,
