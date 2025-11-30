@@ -4,7 +4,8 @@
 #include "printf.h"
 
 const uint32_t CLK_FREQ = 12e6;
-const double TIME_PER_SYMBOL = 0.683;
+// const double TIME_PER_SYMBOL = 0.683;
+const double TIME_PER_SYMBOL = 0.005;
 const uint32_t CYCLES_PER_SYMBOL = CLK_FREQ * TIME_PER_SYMBOL;
 const uint32_t FRAQ_BITS = 29;
 
@@ -49,18 +50,42 @@ uint32_t read_string(char *buf, int len) {
 }
 
 int main() {
+  /* printf("Hallo!"); */
+  /* while (1) { */
+  /* } */
   /* scl_ratio_set(scl_compute_ratio(12e6, 100e3)); */
   /* *I2C_DEVICE_ADDR = 0x5A; */
-  /* *I2C_MASK = 1; */
-  /* *I2C_DATA = 0x20; */
+  /* *I2C_MASK = 0b0001; */
+  /* *I2C_DATA = 0x12345678; */
+  /* uint32_t result = *I2C_DATA; */
+  /* *I2C_DATA = result; */
+
+  /* *I2C_MASK = 0b0010; */
+  /* result = *I2C_DATA; */
+  /* *I2C_DATA = result; */
+
+  /* *I2C_MASK = 0b0011; */
+  /* result = *I2C_DATA; */
+  /* *I2C_DATA = result; */
+
+  /* *I2C_MASK = 0b0101; */
+  /* result = *I2C_DATA; */
+  /* *I2C_DATA = result; */
+
+  /* *I2C_MASK = 0b1111; */
+  /* result = *I2C_DATA; */
+  /* *I2C_DATA = result; */
   /* uint8_t result = *I2C_DATA; */
   /* printf("Returned: %x\r\n", result); */
 
   /* while (1) { */
+  /*   uint8_t data = *GPIO_IN; */
+  /*   data += 1; */
+  /*   *GPIO_OUT = data; */
   /* } */
 
-  /* uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200)); */
-  /* uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200)); */
+  uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+  uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
   interrupts_disable();
   mtvec_set_table(&mtvec_table);
 
@@ -69,19 +94,23 @@ int main() {
   /* int len = read_string(buf, 10); */
   /* printf("len: %d\r\n", len); */
   /* printf("Got: %s\r\n", buf); */
-  /* uart_rx_enable(); */
-  /* uart_interrupt_enable(); */
-  /* interrupts_enable(); */
-
-  /* while (1) { */
-  /* }; */
-
+  uart_rx_enable();
+  uart_interrupt_enable();
+  printf("Ready\r\n");
   external_interrupt_enable();
+  interrupts_enable();
 
-  f_c[0] = compute_osr_fc(1500.0, 3);
-  f_c[1] = compute_osr_fc(1501.5, 3);
-  f_c[2] = compute_osr_fc(1503.0, 3);
-  f_c[3] = compute_osr_fc(1504.5, 3);
+  while(1){
+  }
+
+  /* f_c[0] = compute_osr_fc(1500.0, 3); */
+  /* f_c[1] = compute_osr_fc(1501.5, 3); */
+  /* f_c[2] = compute_osr_fc(1503.0, 3); */
+  /* f_c[3] = compute_osr_fc(1504.5, 3); */
+  /* f_c[0] = (0b11 << 30) | 0b000000100000111010001011101110; */
+  /* f_c[1] = (0b11 << 30) | 0b000001100000111010001011101110; */
+  /* f_c[2] = (0b11 << 30) | 0b000001110000111010001011101110; */
+  /* f_c[3] = (0b11 << 30) | 0b000010000000111010001011101110; */
 
   printf("Ready to transmit!\r\n");
   interrupts_enable();
@@ -119,7 +148,7 @@ __attribute__((interrupt("machine"))) void timer_intr_handler() {
 }
 
 __attribute__((weak, interrupt("machine"))) void uart_intr_handler() {
-  printf("UART interrupt occured! Received %c\r\n", uart_data_read());
+  printf("%c", uart_data_read());
   uart_interrupt_clear();
 }
 

@@ -42,6 +42,7 @@ module chip_core #(
   assign bidir_cs = '0;
   assign bidir_sl = '0;
   assign bidir_ie = ~bidir_oe;
+  // assign bidir_ie = -1;
   assign bidir_pu = '0;
   assign bidir_pd = '0;
 
@@ -51,19 +52,18 @@ module chip_core #(
   cpu cpu (
       .clk(clk),
       .reset(rst_n),
-      .intr_ext(input_in[0]),
-      .so(input_in[1]),
-      .gpio_in(input_in[5:2]),
+      .so(input_in[0]),
+      .gpio_in(input_in[4:1]),
 
       .si(bidir_out[0]),
       .sclk(bidir_out[1]),
       .sram_ce(bidir_out[2]),
       .tx(bidir_out[3]),
-      .rx(input_in[7]),
+      .rx(input_in[6]),
       .gpio_out(bidir_out[7:4]),
 
       .scl(bidir_out[8]),
-      .sda_i(input_in[6]),
+      .sda_i(bidir_in[9]),
       .sda_o(bidir_out[9]),
       .sda_oe(bidir_oe[9]),
 

@@ -59,7 +59,7 @@ module cpu_tb ();
   endgenerate
 
   initial begin
-    $dumpfile("cpu.vcd");
+    $dumpfile("tinywhisper_riscv.vcd");
     $dumpvars(0, dut, sram, uart_tx);
 
     intr_ext = 0;
@@ -86,8 +86,7 @@ module cpu_tb ();
     intr_ext = 0;
     uart_en  = 0;
 
-    // Run for 3s
-    #1_000_000_000;
+    #20_000_000;
     $display("\033[32mTestbench finished running! Verify with the waveform\033[0m");
     $finish;
   end

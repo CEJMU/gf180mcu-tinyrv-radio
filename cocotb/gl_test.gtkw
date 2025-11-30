@@ -1,0 +1,189 @@
+[*]
+[*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
+[*] Sat Nov 29 21:08:47 2025
+[*]
+[dumpfile] "/home/jonathan/Projekte/gf180mcu-tinyrv-radio/cocotb/sim_build/chip_top.fst"
+[dumpfile_mtime] "Sat Nov 29 20:53:56 2025"
+[dumpfile_size] 502504
+[savefile] "/home/jonathan/Projekte/gf180mcu-tinyrv-radio/cocotb/gl_test.gtkw"
+[timestart] 6429578000
+[size] 1916 955
+[pos] -1 -1
+*-18.497042 4371000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 636
+[signals_width] 520
+[sst_expanded] 1
+[sst_vpaned_height] 285
+@22
+chip_top.input_PAD[7:0]
+@800022
+chip_top.bidir_PAD[17:0]
+@28
+(0)chip_top.bidir_PAD[17:0]
+(1)chip_top.bidir_PAD[17:0]
+(2)chip_top.bidir_PAD[17:0]
+(3)chip_top.bidir_PAD[17:0]
+(4)chip_top.bidir_PAD[17:0]
+(5)chip_top.bidir_PAD[17:0]
+(6)chip_top.bidir_PAD[17:0]
+(7)chip_top.bidir_PAD[17:0]
+(8)chip_top.bidir_PAD[17:0]
+(9)chip_top.bidir_PAD[17:0]
+(10)chip_top.bidir_PAD[17:0]
+(11)chip_top.bidir_PAD[17:0]
+(12)chip_top.bidir_PAD[17:0]
+(13)chip_top.bidir_PAD[17:0]
+(14)chip_top.bidir_PAD[17:0]
+(15)chip_top.bidir_PAD[17:0]
+(16)chip_top.bidir_PAD[17:0]
+(17)chip_top.bidir_PAD[17:0]
+chip_top.\i_chip_core.cpu.memory_i.i2c_acks[0]
+chip_top.\i_chip_core.cpu.memory_i.i2c_acks[1]
+chip_top.\i_chip_core.cpu.memory_i.i2c_acks[2]
+chip_top.\i_chip_core.cpu.memory_i.i2c_acks[3]
+chip_top.\i_chip_core.cpu.memory_i.i2c_acks[4]
+@1001200
+-group_end
+@28
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.start
+@c00022
+#{chip_top.\i_chip_core.cpu.gpio_in[3:0]} chip_top.\i_chip_core.cpu.gpio_in[3] chip_top.\i_chip_core.cpu.gpio_in[2] chip_top.\i_chip_core.cpu.gpio_in[1] chip_top.\i_chip_core.cpu.gpio_in[0] chip_top.\i_chip_core.cpu.gpio_in[3] chip_top.\i_chip_core.cpu.gpio_in[2] chip_top.\i_chip_core.cpu.gpio_in[1] chip_top.\i_chip_core.cpu.gpio_in[0]
+@800022
+#{chip_top.\i_chip_core.cpu.gpio_in[0:3]} chip_top.\i_chip_core.cpu.gpio_in[0] chip_top.\i_chip_core.cpu.gpio_in[1] chip_top.\i_chip_core.cpu.gpio_in[2] chip_top.\i_chip_core.cpu.gpio_in[3]
+@28
+chip_top.\i_chip_core.cpu.gpio_in[0]
+chip_top.\i_chip_core.cpu.gpio_in[1]
+chip_top.\i_chip_core.cpu.gpio_in[2]
+chip_top.\i_chip_core.cpu.gpio_in[3]
+@1001200
+-group_end
+@1401200
+-group_end
+@c10420
+#{chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[29:0]} chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[29] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[28] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[27] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[26] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[25] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[24] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[23] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[22] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[21] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[20] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[19] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[18] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[17] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[16] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[15] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[14] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[13] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[12] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[11] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[10] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[9] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[8] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[7] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[6] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[5] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[4] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[3] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[2] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[1] chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[0]
+@28
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[0]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[1]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[2]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[3]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[4]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[5]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[6]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[7]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[8]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[9]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[10]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[11]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[12]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[13]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[14]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[15]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[16]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[17]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[18]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[19]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[20]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[21]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[22]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[23]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[24]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[25]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[26]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[27]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[28]
+chip_top.\i_chip_core.cpu.memory_i.freq_inst.cosine[29]
+@1401200
+-group_end
+@20000
+-
+-
+@28
+chip_top.\i_chip_core.cpu.control_i.state_q[0]
+chip_top.\i_chip_core.cpu.control_i.state_q[2]
+chip_top.\i_chip_core.cpu.control_i.jump_to_isr
+chip_top.\i_chip_core.cpu.control_i.load_access_fault
+chip_top.\i_chip_core.cpu.csr_i.pc[0]
+chip_top.\i_chip_core.cpu.csr_i.pc[1]
+chip_top.\i_chip_core.cpu.csr_i.mcause[31]
+chip_top.\i_chip_core.cpu.csr_i.mcause[0]
+chip_top.\i_chip_core.cpu.csr_i.mcause[1]
+chip_top.\i_chip_core.cpu.csr_i.mcause[2]
+chip_top.\i_chip_core.cpu.csr_i.mcause[3]
+chip_top.\i_chip_core.cpu.csr_i.mcause[4]
+chip_top.\i_chip_core.cpu.csr_i.mcause[5]
+@29
+chip_top.\i_chip_core.cpu.csr_i.mcause[31]
+@c00022
+#{chip_top.\i_chip_core.cpu.memory_i.addr_reg[31:0]} chip_top.\i_chip_core.cpu.memory_i.addr_reg[31] chip_top.\i_chip_core.cpu.memory_i.addr_reg[30] chip_top.\i_chip_core.cpu.memory_i.addr_reg[29] chip_top.\i_chip_core.cpu.memory_i.addr_reg[28] chip_top.\i_chip_core.cpu.memory_i.addr_reg[27] chip_top.\i_chip_core.cpu.memory_i.addr_reg[26] chip_top.\i_chip_core.cpu.memory_i.addr_reg[25] chip_top.\i_chip_core.cpu.memory_i.addr_reg[24] chip_top.\i_chip_core.cpu.memory_i.addr_reg[23] chip_top.\i_chip_core.cpu.memory_i.addr_reg[22] chip_top.\i_chip_core.cpu.memory_i.addr_reg[21] chip_top.\i_chip_core.cpu.memory_i.addr_reg[20] chip_top.\i_chip_core.cpu.memory_i.addr_reg[19] chip_top.\i_chip_core.cpu.memory_i.addr_reg[18] chip_top.\i_chip_core.cpu.memory_i.addr_reg[17] chip_top.\i_chip_core.cpu.memory_i.addr_reg[16] chip_top.\i_chip_core.cpu.memory_i.addr_reg[15] chip_top.\i_chip_core.cpu.memory_i.addr_reg[14] chip_top.\i_chip_core.cpu.memory_i.addr_reg[13] chip_top.\i_chip_core.cpu.memory_i.addr_reg[12] chip_top.\i_chip_core.cpu.memory_i.addr_reg[11] chip_top.\i_chip_core.cpu.memory_i.addr_reg[10] chip_top.\i_chip_core.cpu.memory_i.addr_reg[9] chip_top.\i_chip_core.cpu.memory_i.addr_reg[8] chip_top.\i_chip_core.cpu.memory_i.addr_reg[7] chip_top.\i_chip_core.cpu.memory_i.addr_reg[6] chip_top.\i_chip_core.cpu.memory_i.addr_reg[5] chip_top.\i_chip_core.cpu.memory_i.addr_reg[4] chip_top.\i_chip_core.cpu.memory_i.addr_reg[3] chip_top.\i_chip_core.cpu.memory_i.addr_reg[2] chip_top.\i_chip_core.cpu.memory_i.addr_reg[1] chip_top.\i_chip_core.cpu.memory_i.addr_reg[0]
+@28
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[0]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[1]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[2]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[3]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[4]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[5]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[6]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[7]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[8]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[9]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[10]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[11]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[12]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[13]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[14]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[15]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[16]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[17]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[18]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[19]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[20]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[21]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[22]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[23]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[24]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[25]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[26]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[27]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[28]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[29]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[30]
+chip_top.\i_chip_core.cpu.memory_i.addr_reg[31]
+@1401202
+-group_end
+@28
+chip_top.clk_PAD
+chip_top.\i_chip_core.cpu.control_i.mem_valid
+@c00022
+#{chip_top.\i_chip_core.cpu.alu_i.funct7[6:0]} chip_top.\i_chip_core.cpu.alu_i.funct7[6] chip_top.\i_chip_core.cpu.alu_i.funct7[5] chip_top.\i_chip_core.cpu.alu_i.funct7[4] chip_top.\i_chip_core.cpu.alu_i.funct7[3] chip_top.\i_chip_core.cpu.alu_i.funct7[2] chip_top.\i_chip_core.cpu.alu_i.funct7[1] chip_top.\i_chip_core.cpu.alu_i.funct7[0]
+@28
+chip_top.\i_chip_core.cpu.alu_i.funct7[0]
+chip_top.\i_chip_core.cpu.alu_i.funct7[1]
+chip_top.\i_chip_core.cpu.alu_i.funct7[2]
+chip_top.\i_chip_core.cpu.alu_i.funct7[3]
+chip_top.\i_chip_core.cpu.alu_i.funct7[4]
+chip_top.\i_chip_core.cpu.alu_i.funct7[5]
+chip_top.\i_chip_core.cpu.alu_i.funct7[6]
+@1401200
+-group_end
+@28
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[24]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[23]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[22]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[21]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[20]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[19]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[18]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[17]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[16]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[15]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[11]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[10]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[9]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[8]
+chip_top.\i_chip_core.cpu.control_i.imm_gen_i.iword[7]
+chip_top.\i_chip_core.cpu.alu_i.funct3[2]
+chip_top.\i_chip_core.cpu.alu_i.funct3[1]
+chip_top.\i_chip_core.cpu.alu_i.funct3[0]
+chip_top.\i_chip_core.cpu.control_i.mem_valid
+[pattern_trace] 1
+[pattern_trace] 0

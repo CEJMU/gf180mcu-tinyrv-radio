@@ -92,7 +92,7 @@ PAD_WEST: [
     # "inputs\\[10\\].pad",
     # "inputs\\[9\\].pad",
     # "inputs\\[8\\].pad",
-    "inputs\\[7\\].pad",
+    # "inputs\\[7\\].pad",
     "inputs\\[6\\].pad",
 
     "dvdd_pads\\[5\\].pad",

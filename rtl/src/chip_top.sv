@@ -12,7 +12,9 @@
 // TODO: default werte loswerden
 `default_nettype none
 
+`ifndef SIM
 `include "slot_defines.svh"
+`endif
 
 module chip_top #(
     // Power/ground pads for core and I/O
