@@ -59,14 +59,9 @@ module spi_master (
     end else if (req == 1) begin  // active low
       state <= RESET;
       ce <= 1'b0;
+      si <= 1'b0;
     end else if (sclk_tmp == 0) begin  // == posedge of sclk (we set it to 1 in the same cycle)
       case (state)
-        RESET: begin
-          write_reg <= write;
-          state <= SEND_COMMAND;
-          index <= 7;
-          ce <= 1'b1;
-        end
 
         SEND_COMMAND: begin
           if (index == 0) begin
@@ -99,23 +94,21 @@ module spi_master (
           end else index <= index - 1;
         end
 
-        VALID: ce <= 1'b0;
-
         default: state <= (state == VALID) ? VALID : RESET;
       endcase
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (reset == 0) begin
-      si <= 1;
-    end
-    else if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
+    end else if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
       case (state)
+        RESET: begin
+          write_reg <= write;
+          state <= SEND_COMMAND;
+          index <= 7;
+          ce <= 1'b1;
+        end
         SEND_COMMAND: si <= (write_reg) ? SPI_WRITE_CMD[index[2:0]] : SPI_READ_CMD[index[2:0]];
 
         SEND_ADDR: si <= addr[index[4:0]];
         SEND_DATA: si <= data_in[index[4:0]];
+        VALID: ce <= 1'b0;
       endcase
     end
   end

@@ -182,7 +182,7 @@ MACROS:
         - dir::../ip/gf180mcu_ws_ip__logo/lib/gf180mcu_ws_ip__logo.lib
     instances:
       wafer_space_logo:
-        location: ["expr::$DIE_AREA[2] + -169.25", "expr::$DIE_AREA[3] + -169.25"]
+        location: ["expr::$DIE_AREA[2] + -1000", "expr::$DIE_AREA[3] + -1000"]
         orientation: N
 
   # gf180mcu_fd_ip_sram__sram64x8m8wm1:

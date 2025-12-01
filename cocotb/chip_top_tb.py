@@ -69,7 +69,7 @@ async def start_up(dut, program_path):
     await start_clock(dut.clk_PAD, CPU_CLK_FREQ)
     await reset(dut.rst_n_PAD)
 
-state = "IDLE"
+state = "RECV_COMMAND"
 WRITE_CMD = 2
 READ_CMD = 3
 command_reg = LogicArray(0, Range(7, "downto", 0))
@@ -99,7 +99,7 @@ async def do_spi(dut):
         si = dut.bidir_PAD.get()[0]
 
         if dut.bidir_PAD.get()[2] == 0:
-            state = "IDLE"
+            state = "RECV_COMMAND"
             index = 7
         else:
             if state == "IDLE":
@@ -107,12 +107,13 @@ async def do_spi(dut):
                 index = 7
 
             elif state == "RECV_COMMAND":
-                command_reg[index] = si
-                if index == 0:
-                    index = 23
-                    state = "RECV_ADDR"
-                else:
-                    index = index - 1
+                if dut.bidir_PAD.get()[2] == 1:
+                    command_reg[index] = si
+                    if index == 0:
+                        index = 23
+                        state = "RECV_ADDR"
+                    else:
+                        index = index - 1
 
             elif state == "RECV_ADDR":
                 addr_reg[index] = si
