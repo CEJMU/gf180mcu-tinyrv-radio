@@ -9,6 +9,7 @@ module cpu_tb ();
   logic so, si, sclk, sram_ce;
   logic rst_n;
   logic intr_ext;
+  logic [3:0] gpio_in;
 
   logic rx;
   logic uart_en;
@@ -19,10 +20,11 @@ module cpu_tb ();
       .si(si),
       .sclk(sclk),
       .sram_ce(sram_ce),
-      .intr_ext(intr_ext),
+      .gpio_in(gpio_in),
       .rx(rx)
   );
 
+  assign gpio_in = {3'b0, intr_ext};
   sram_sim #(
       .INIT_FILE("../c_toolchain/build/demo.txt")
       // .INIT_FILE("../asm/misc/i2cce.txt")

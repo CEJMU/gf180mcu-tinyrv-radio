@@ -25,7 +25,7 @@ set_io -nowarn sda              19
 set_io -nowarn scl              18
 set_io -nowarn tx               25
 set_io -nowarn rx               27
-set_io -nowarn intr_ext         20
+# set_io -nowarn intr_ext         20
 
 # gpio inputs on top left pmod
 

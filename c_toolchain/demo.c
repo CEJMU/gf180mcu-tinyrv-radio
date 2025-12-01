@@ -4,8 +4,7 @@
 #include "printf.h"
 
 const uint32_t CLK_FREQ = 12e6;
-// const double TIME_PER_SYMBOL = 0.683;
-const double TIME_PER_SYMBOL = 0.005;
+const double TIME_PER_SYMBOL = 0.683;
 const uint32_t CYCLES_PER_SYMBOL = CLK_FREQ * TIME_PER_SYMBOL;
 const uint32_t FRAQ_BITS = 29;
 
@@ -53,12 +52,12 @@ int main() {
   /* printf("Hallo!"); */
   /* while (1) { */
   /* } */
-  /* scl_ratio_set(scl_compute_ratio(12e6, 100e3)); */
-  /* *I2C_DEVICE_ADDR = 0x5A; */
-  /* *I2C_MASK = 0b0001; */
-  /* *I2C_DATA = 0x12345678; */
-  /* uint32_t result = *I2C_DATA; */
-  /* *I2C_DATA = result; */
+  scl_ratio_set(scl_compute_ratio(12e6, 100e3));
+  *I2C_DEVICE_ADDR = 0x5A;
+  *I2C_MASK = 0b0001;
+  *I2C_DATA = 0x20;
+  uint32_t result = *I2C_DATA;
+  printf("Returned: %x\r\n", result);
 
   /* *I2C_MASK = 0b0010; */
   /* result = *I2C_DATA; */
@@ -100,13 +99,10 @@ int main() {
   external_interrupt_enable();
   interrupts_enable();
 
-  while(1){
-  }
-
-  /* f_c[0] = compute_osr_fc(1500.0, 3); */
-  /* f_c[1] = compute_osr_fc(1501.5, 3); */
-  /* f_c[2] = compute_osr_fc(1503.0, 3); */
-  /* f_c[3] = compute_osr_fc(1504.5, 3); */
+  f_c[0] = compute_osr_fc(1500.0, 3);
+  f_c[1] = compute_osr_fc(1501.5, 3);
+  f_c[2] = compute_osr_fc(1503.0, 3);
+  f_c[3] = compute_osr_fc(1504.5, 3);
   /* f_c[0] = (0b11 << 30) | 0b000000100000111010001011101110; */
   /* f_c[1] = (0b11 << 30) | 0b000001100000111010001011101110; */
   /* f_c[2] = (0b11 << 30) | 0b000001110000111010001011101110; */
