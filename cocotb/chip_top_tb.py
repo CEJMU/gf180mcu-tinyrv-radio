@@ -24,7 +24,7 @@ hdl_toplevel = "chip_top"
 CPU_CLK_FREQ = 20  # MHz
 
 mem = {}
-async def set_defaults(dut, program_path):
+async def set_defaults(dut, program_path, slow_spi):
     global mem
     mem = {}
 
@@ -35,7 +35,10 @@ async def set_defaults(dut, program_path):
     for i, line in enumerate(lines):
         mem[i] = LogicArray(int(line, base=16), Range(7, "downto", 0))
 
-    dut.input_PAD.value = 2**6  # uart rx set to 1
+    if slow_spi:
+        dut.input_PAD.value = 2**6 + 2**4  # uart rx set to 1 + gpio[3] to 1
+    else:
+        dut.input_PAD.value = 2**6  # uart rx set to 1
 
 
 async def enable_power(dut):
@@ -60,10 +63,10 @@ async def reset(reset, active_low=True, time_ns=1000):
     cocotb.log.info("Reset deasserted.")
 
 
-async def start_up(dut, program_path):
+async def start_up(dut, program_path, slow_spi=0):
     global CPU_CLK_FREQ
     """Startup sequence"""
-    await set_defaults(dut, program_path)
+    await set_defaults(dut, program_path, slow_spi)
     if gl:
         await enable_power(dut)
     await start_clock(dut.clk_PAD, CPU_CLK_FREQ)
@@ -80,7 +83,6 @@ index = 0
 mem_pattern = []
 prev_sclk = 0
 
-
 async def do_spi(dut):
     global state
     global mem
@@ -95,83 +97,76 @@ async def do_spi(dut):
     global prev_sclk
 
     sclk = dut.bidir_PAD.get()[1]
-    if sclk == 1 and prev_sclk == 0:
-        si = dut.bidir_PAD.get()[0]
+    si = dut.bidir_PAD.get()[0]
+    if dut.bidir_PAD.get()[2] == 0:  # cs = 0
+        state = "RECV_COMMAND"
+        index = 7
+        prev_sclk = sclk
+        tmp = dut.input_PAD.get()
+        tmp[0] = Logic(0)
+        dut.input_PAD.set(Immediate(tmp))
 
-        if dut.bidir_PAD.get()[2] == 0:
-            state = "RECV_COMMAND"
-            index = 7
-        else:
-            if state == "IDLE":
-                state = "RECV_COMMAND"
+        return
+
+    if sclk == 1 and prev_sclk == 0:
+        if state == "RECV_COMMAND":
+            if dut.bidir_PAD.get()[2] == 1:
+                command_reg[index] = si
+                if index == 0:
+                    index = 23
+                    state = "RECV_ADDR"
+                else:
+                    index = index - 1
+
+        elif state == "RECV_ADDR":
+            addr_reg[index] = si
+            if index == 0:
                 index = 7
 
-            elif state == "RECV_COMMAND":
-                if dut.bidir_PAD.get()[2] == 1:
-                    command_reg[index] = si
-                    if index == 0:
-                        index = 23
-                        state = "RECV_ADDR"
-                    else:
-                        index = index - 1
+                if command_reg.to_unsigned() == READ_CMD:
+                    state = "SEND_DATA"
+                    addr_tmp = addr_reg[22:0].to_unsigned()
+                    dataout_reg = mem[addr_tmp]
 
-            elif state == "RECV_ADDR":
-                addr_reg[index] = si
-                if index == 0:
+                elif command_reg.to_unsigned() == WRITE_CMD:
+                    state = "RECV_DATA"
                     index = 7
-
-                    if command_reg.to_unsigned() == READ_CMD:
-                        state = "SEND_DATA"
-                        addr_tmp = addr_reg[22:0].to_unsigned()
-                        dataout_reg = mem[addr_tmp]
-
-                        # First SEND_DATA iteration copied here
-                        tmp = dut.input_PAD.get()
-                        tmp[0] = dataout_reg[index]
-                        dut.input_PAD.set(Immediate(tmp))
-
-                        if index == 0:
-                            state = "END"
-                        else:
-                            index = index - 1
-
-                    elif command_reg.to_unsigned() == WRITE_CMD:
-                        state = "RECV_DATA"
-                        index = 7
-                    else:
-                        print("GOT UNKNOWN SPI COMMAND!!!!!")
                 else:
-                    index = index - 1
+                    print("GOT UNKNOWN SPI COMMAND!!!!!")
+            else:
+                index = index - 1
 
-            elif state == "RECV_DATA":
-                datain_reg[index] = si
-                if index == 0:
-                    mem[addr_reg.to_unsigned()] = LogicArray(datain_reg.to_unsigned(), Range(7, "downto", 0))
+        elif state == "WAITING":
+            state = "SEND_DATA"
 
-                    mem_pattern.append((addr_reg[22:0].to_unsigned(), datain_reg.to_unsigned()))
-                    index = 7
-                    addr_reg = LogicArray(addr_reg[22:0].to_unsigned() + 1, Range(23, "downto", 0))
+        elif state == "RECV_DATA":
+            datain_reg[index] = si
+            if index == 0:
+                mem[addr_reg.to_unsigned()] = LogicArray(datain_reg.to_unsigned(), Range(7, "downto", 0))
+
+                mem_pattern.append((addr_reg[22:0].to_unsigned(), datain_reg.to_unsigned()))
+                index = 7
+                addr_reg = LogicArray(addr_reg[22:0].to_unsigned() + 1, Range(23, "downto", 0))
+            else:
+                index = index - 1
+
+        elif state == "SEND_DATA":
+            if index == 0:
+                index = 7
+                addr_reg = LogicArray(addr_reg[22:0].to_unsigned() + 1, Range(23, "downto", 0))
+                addr_tmp = addr_reg.to_unsigned()
+                if addr_tmp in mem:
+                    dataout_reg = mem[addr_reg.to_unsigned()]
                 else:
-                    index = index - 1
+                    dataout_reg = LogicArray("XXXXXXXX", Range(7, "downto", 0))
+            else:
+                index = index - 1
 
-            elif state == "SEND_DATA":
-                tmp = dut.input_PAD.get()
-                tmp[0] = dataout_reg[index]
-                dut.input_PAD.set(Immediate(tmp))
-
-                if index == 0:
-                    index = 7
-                    addr_reg = LogicArray(addr_reg[22:0].to_unsigned() + 1, Range(23, "downto", 0))
-                    addr_tmp = addr_reg.to_unsigned()
-                    if addr_tmp in mem:
-                        dataout_reg = mem[addr_reg.to_unsigned()]
-                    else:
-                        dataout_reg = LogicArray("XXXXXXXX", Range(7, "downto", 0))
-                else:
-                    index = index - 1
-
-            elif state == "END":
-                pass
+    elif sclk == 0 and prev_sclk == 1:
+        if state == "SEND_DATA":
+            tmp = dut.input_PAD.get()
+            tmp[0] = dataout_reg[index]
+            dut.input_PAD.set(Immediate(tmp))
 
     prev_sclk = sclk
 
@@ -395,8 +390,46 @@ async def do_i2c_slave(dut):
 
 
 @cocotb.test()
-async def test_fibonacci(dut):
+async def test_fibonacci_slow(dut):
     global mem_pattern
+    mem_pattern = []
+    mem_pattern_correct = [
+        (160, 2), (161, 0), (162, 0), (163, 0),
+        (164, 3), (165, 0), (166, 0), (167, 0),
+        (168, 5), (169, 0), (170, 0), (171, 0),
+        (172, 8), (173, 0), (174, 0), (175, 0),
+        (176, 13), (177, 0), (178, 0), (179, 0),
+        (180, 21), (181, 0), (182, 0), (183, 0),
+        (184, 34), (185, 0), (186, 0), (187, 0),
+        (188, 55), (189, 0), (190, 0), (191, 0),
+        (192, 89), (193, 0), (194, 0), (195, 0),
+    ]
+
+    # Create a logger for this testbench
+    logger = logging.getLogger("my_testbench")
+
+    logger.info("Startup sequence...")
+
+    # Start up
+    await start_up(dut, "../fib.txt", slow_spi=1)
+    logger.info("Testing basic fibonacci program")
+
+    # Wait for a number of clock cycles
+    for i in range(20000):
+        await ClockCycles(dut.clk_PAD, 1)
+
+        await do_spi(dut)
+
+    # Check the end result of the counter
+    print(mem_pattern)
+    assert mem_pattern == mem_pattern_correct
+    logger.info("Done!")
+
+
+@cocotb.test()
+async def test_fibonacci_fast(dut):
+    global mem_pattern
+    mem_pattern = []
     mem_pattern_correct = [
         (160, 2), (161, 0), (162, 0), (163, 0),
         (164, 3), (165, 0), (166, 0), (167, 0),
@@ -419,7 +452,7 @@ async def test_fibonacci(dut):
     logger.info("Testing basic fibonacci program")
 
     # Wait for a number of clock cycles
-    for i in range(10000):
+    for i in range(18000):
         await ClockCycles(dut.clk_PAD, 1)
 
         await do_spi(dut)
@@ -548,24 +581,24 @@ async def test_gpio(dut):
 
     # Test 0111 + 1 = 1000
     tmp = dut.input_PAD.get()
-    tmp[4] = 0
     tmp[3] = 1
     tmp[2] = 1
     tmp[1] = 1
     dut.input_PAD.set(Immediate(tmp))
     # Wait for a number of clock cycles
 
+    print(dut.bidir_PAD.get()[7:4])
     assert dut.bidir_PAD.get()[7:4] == 0b0000
     for i in range(5000):
         await ClockCycles(dut.clk_PAD, 1)
         await do_spi(dut)
 
     # Check the end result of the counter
+    print(dut.bidir_PAD.get()[7:4])
     assert dut.bidir_PAD.get()[7:4] == 0b1000
 
     # Test 1010 + 1 = 1011
     tmp = dut.input_PAD.get()
-    tmp[4] = 1
     tmp[3] = 0
     tmp[2] = 1
     tmp[1] = 0
@@ -577,7 +610,8 @@ async def test_gpio(dut):
         await do_spi(dut)
 
     # Check the end result of the counter
-    assert dut.bidir_PAD.get()[7:4] == 0b1011
+    print(dut.bidir_PAD.get()[7:4])
+    assert dut.bidir_PAD.get()[7:4] == 0b0011
     logger.info("Done!")
 
 

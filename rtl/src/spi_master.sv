@@ -1,7 +1,8 @@
 module spi_master (
     input logic clk,
-    input logic reset,  // reset should be held high if not in use
+    input logic reset,     // reset should be held high if not in use
     input logic req,
+    input logic slow_mode, // Divide sclk by 4 instead of 2
 
     input  logic so,
     output logic si,
@@ -40,27 +41,41 @@ module spi_master (
   localparam logic [7:0] SPI_WRITE_CMD = 8'h02;
   localparam logic [7:0] SPI_READ_CMD = 8'h03;
 
-  byte  index;
-  byte  end_index;
+  byte index;
+  byte end_index;
 
-  logic sclk_tmp;
+  logic [1:0] clk_counter;
+  logic posedge_trigger;
+  logic negedge_trigger;
 
-  // State transistions (delta)
-  always_ff @(posedge clk) begin
-    sclk_tmp <= !sclk_tmp;  // Generating sclk for sram
+  always_ff @(posedge clk) begin : clock_generator
+    clk_counter <= clk_counter + 1;
+    posedge_trigger <= 1'b0;
+    negedge_trigger <= 1'b0;
+
+    if (slow_mode) begin
+      if (clk_counter == 0) posedge_trigger <= 1;
+      else if (clk_counter == 2) negedge_trigger <= 1;
+    end else begin
+      if (clk_counter[0] == 0) posedge_trigger <= 1;
+      else negedge_trigger <= 1;
+    end
+
+    // if (slow_mode && clk_counter == 0 || !slow_mode && clk_counter[0] == 0) begin
+    //   posedge_trigger <= 1'b1;
+    // end else if (slow_mode && clk_counter == 0 || !slow_mode && clk_counter[0] == 0) begin
+    //   negedge_trigger <= 1'b1;
+    // end
 
     if (reset == 0) begin
-      write_reg <= 0;
-      state <= RESET;
-      ce <= 1'b0;
-      sclk_tmp <= 1'b0;
-      index <= 7;
-      data_out <= 32'd0;
-    end else if (req == 1) begin  // active low
-      state <= RESET;
-      ce <= 1'b0;
-      si <= 1'b0;
-    end else if (sclk_tmp == 0) begin  // == posedge of sclk (we set it to 1 in the same cycle)
+      clk_counter <= 0;
+    end
+  end
+  // State transistions (delta)
+  always_ff @(posedge clk) begin
+    if (posedge_trigger) begin  // == posedge of sclk (we set it to 1 in the same cycle)
+      sclk <= 1;
+
       case (state)
 
         SEND_COMMAND: begin
@@ -73,7 +88,7 @@ module spi_master (
         SEND_ADDR: begin
           if (index == 0) begin  // 0 is last valid index
             if (write_reg == 1'b1) state <= SEND_DATA;
-            else state <= RECV_DATA;
+            else state <= WAITING;
 
             index <= 31;
           end else index <= index - 1;
@@ -82,7 +97,6 @@ module spi_master (
         WAITING: state <= RECV_DATA;
 
         RECV_DATA: begin
-          data_out[index[4:0]] <= so;
           if (index == end_index) begin
             state <= VALID;
           end else index <= index - 1;
@@ -96,7 +110,9 @@ module spi_master (
 
         default: state <= (state == VALID) ? VALID : RESET;
       endcase
-    end else if (sclk_tmp == 1) begin  // == negedge of sclk. Setting si here so it's stable on posedge
+    end else if (negedge_trigger) begin  // == negedge of sclk. Setting si here so it's stable on posedge
+      sclk <= 0;
+
       case (state)
         RESET: begin
           write_reg <= write;
@@ -105,11 +121,28 @@ module spi_master (
           ce <= 1'b1;
         end
         SEND_COMMAND: si <= (write_reg) ? SPI_WRITE_CMD[index[2:0]] : SPI_READ_CMD[index[2:0]];
+        RECV_DATA: begin
+          data_out[index[4:0]] <= so;
+        end
 
         SEND_ADDR: si <= addr[index[4:0]];
         SEND_DATA: si <= data_in[index[4:0]];
         VALID: ce <= 1'b0;
       endcase
+    end
+
+    if (req == 1) begin  // active low
+      state <= RESET;
+      ce <= 1'b0;
+      si <= 1'b0;
+    end
+
+    if (reset == 0) begin
+      write_reg <= 0;
+      state <= RESET;
+      ce <= 1'b0;
+      index <= 7;
+      data_out <= 32'd0;
     end
   end
 
@@ -138,7 +171,5 @@ module spi_master (
       default: end_index = 0;
     endcase
   end
-
-  assign sclk = sclk_tmp;
 
 endmodule  // spi_master

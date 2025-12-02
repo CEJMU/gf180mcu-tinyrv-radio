@@ -3,7 +3,7 @@
 #include "mmio.h"
 #include "printf.h"
 
-const uint32_t CLK_FREQ = 12e6;
+const uint32_t CLK_FREQ = 50e6;
 const double TIME_PER_SYMBOL = 0.683;
 const uint32_t CYCLES_PER_SYMBOL = CLK_FREQ * TIME_PER_SYMBOL;
 const uint32_t FRAQ_BITS = 29;
@@ -52,7 +52,13 @@ int main() {
   /* printf("Hallo!"); */
   /* while (1) { */
   /* } */
-  scl_ratio_set(scl_compute_ratio(12e6, 100e3));
+  interrupts_disable();
+  mtvec_set_table(&mtvec_table);
+
+  scl_ratio_set(scl_compute_ratio(CLK_FREQ, 100e3));
+  uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+  uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
+  printf("READY\r\n");
   *I2C_DEVICE_ADDR = 0x5A;
   *I2C_MASK = 0b0001;
   *I2C_DATA = 0x20;
@@ -82,11 +88,6 @@ int main() {
   /*   data += 1; */
   /*   *GPIO_OUT = data; */
   /* } */
-
-  uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-  uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-  interrupts_disable();
-  mtvec_set_table(&mtvec_table);
 
   /* char buf[10]; */
   /* printf("Hallo: "); */
