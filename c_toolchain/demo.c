@@ -2,8 +2,9 @@
 #include "interrupts.h"
 #include "mmio.h"
 #include "printf.h"
+#include "wspr.h"
 
-const uint32_t CLK_FREQ = 50e6;
+const uint32_t CLK_FREQ = 12e6;
 const double TIME_PER_SYMBOL = 0.683;
 const uint32_t CYCLES_PER_SYMBOL = CLK_FREQ * TIME_PER_SYMBOL;
 const uint32_t FRAQ_BITS = 29;
@@ -58,12 +59,12 @@ int main() {
   scl_ratio_set(scl_compute_ratio(CLK_FREQ, 100e3));
   uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
   uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-  printf("READY\r\n");
-  *I2C_DEVICE_ADDR = 0x5A;
-  *I2C_MASK = 0b0001;
-  *I2C_DATA = 0x20;
-  uint32_t result = *I2C_DATA;
-  printf("Returned: %x\r\n", result);
+  /* printf("READY\r\n"); */
+  /* *I2C_DEVICE_ADDR = 0x5A; */
+  /* *I2C_MASK = 0b0001; */
+  /* *I2C_DATA = 0x20; */
+  /* uint32_t result = *I2C_DATA; */
+  /* printf("Returned: %x\r\n", result); */
 
   /* *I2C_MASK = 0b0010; */
   /* result = *I2C_DATA; */
@@ -94,12 +95,6 @@ int main() {
   /* int len = read_string(buf, 10); */
   /* printf("len: %d\r\n", len); */
   /* printf("Got: %s\r\n", buf); */
-  uart_rx_enable();
-  uart_interrupt_enable();
-  printf("Ready\r\n");
-  external_interrupt_enable();
-  interrupts_enable();
-
   f_c[0] = compute_osr_fc(1500.0, 3);
   f_c[1] = compute_osr_fc(1501.5, 3);
   f_c[2] = compute_osr_fc(1503.0, 3);
@@ -109,8 +104,26 @@ int main() {
   /* f_c[2] = (0b11 << 30) | 0b000001110000111010001011101110; */
   /* f_c[3] = (0b11 << 30) | 0b000010000000111010001011101110; */
 
+  uart_rx_enable();
+  char call[10];
+  char loc[10];
+  char pwr[10];
+  printf("Callsign: ");
+  read_string(call, 10);
+  printf("\r\nLocator: ");
+  read_string(loc, 10);
+  printf("\r\nPower: ");
+  read_string(pwr, 10);
+  printf("\r\n");
+
+  wspr_compute_symbols(symbols, call, loc, pwr);
+
   printf("Ready to transmit!\r\n");
+  /* external_interrupt_enable(); */
+  printf("ENTER to start\r\n");
+  read_string(call, 10);
   interrupts_enable();
+  start_transmission();
 
   // Waiting for start button
   while (!freq_active_get()) {
@@ -140,7 +153,7 @@ __attribute__((interrupt("machine"))) void timer_intr_handler() {
   } else {
     end_transmission();
     external_interrupt_clear();
-    external_interrupt_enable();
+    /* external_interrupt_enable(); */
   }
 }
 

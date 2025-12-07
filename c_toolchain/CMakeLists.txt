@@ -41,6 +41,7 @@ target_sources("demo.elf" PUBLIC
   "interrupts.c"
   "csr.c"
   "mmio.c"
+  "wspr.c"
   "printf/printf.c"
 )
 
