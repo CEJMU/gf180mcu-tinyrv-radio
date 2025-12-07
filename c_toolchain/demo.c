@@ -32,16 +32,28 @@ uint32_t read_string(char *buf, int len) {
   uart_interrupt_clear();
 
   int i;
-  for (i = 0; i < len - 1; i++) {
+  for (i = 0; i < len - 1;) {
     while (!uart_interrupt_pending()) {
       // Idle
     }
-    buf[i] = uart_data_read();
+    char current = uart_data_read();
     uart_interrupt_clear();
 
-    if (buf[i] == 0x0D) {
+    // Carriage return
+    if (current == 0x0D) {
       buf[i] = '\0';
+      printf("\r\n");
       return i;
+    }
+    // Backspace
+    /* else if (current == 0x08) { */
+    /*   /\* printf("\x1b[C"); // Move cursor one backwards *\/ */
+    /*   printf("back"); */
+    /*   i--; */
+    /* } */
+    else {
+      printf("%c", current);
+      buf[i++] = current;
     }
   }
 
@@ -110,17 +122,18 @@ int main() {
   char pwr[10];
   printf("Callsign: ");
   read_string(call, 10);
-  printf("\r\nLocator: ");
-  read_string(loc, 10);
-  printf("\r\nPower: ");
-  read_string(pwr, 10);
-  printf("\r\n");
 
+  printf("Locator: ");
+  read_string(loc, 10);
+
+  printf("Power: ");
+  read_string(pwr, 10);
+
+  printf("Computing WSPR...");
   wspr_compute_symbols(symbols, call, loc, pwr);
 
-  printf("Ready to transmit!\r\n");
+  printf("\rReady to transmit. Press ENTER to start\r\n");
   /* external_interrupt_enable(); */
-  printf("ENTER to start\r\n");
   read_string(call, 10);
   interrupts_enable();
   start_transmission();
