@@ -62,59 +62,17 @@ uint32_t read_string(char *buf, int len) {
 }
 
 int main() {
-  /* printf("Hallo!"); */
-  /* while (1) { */
-  /* } */
   interrupts_disable();
   mtvec_set_table(&mtvec_table);
 
   scl_ratio_set(scl_compute_ratio(CLK_FREQ, 100e3));
   uart_rx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
   uart_tx_set_cpb(uart_compute_cpb(CLK_FREQ, 115200));
-  /* printf("READY\r\n"); */
-  /* *I2C_DEVICE_ADDR = 0x5A; */
-  /* *I2C_MASK = 0b0001; */
-  /* *I2C_DATA = 0x20; */
-  /* uint32_t result = *I2C_DATA; */
-  /* printf("Returned: %x\r\n", result); */
 
-  /* *I2C_MASK = 0b0010; */
-  /* result = *I2C_DATA; */
-  /* *I2C_DATA = result; */
-
-  /* *I2C_MASK = 0b0011; */
-  /* result = *I2C_DATA; */
-  /* *I2C_DATA = result; */
-
-  /* *I2C_MASK = 0b0101; */
-  /* result = *I2C_DATA; */
-  /* *I2C_DATA = result; */
-
-  /* *I2C_MASK = 0b1111; */
-  /* result = *I2C_DATA; */
-  /* *I2C_DATA = result; */
-  /* uint8_t result = *I2C_DATA; */
-  /* printf("Returned: %x\r\n", result); */
-
-  /* while (1) { */
-  /*   uint8_t data = *GPIO_IN; */
-  /*   data += 1; */
-  /*   *GPIO_OUT = data; */
-  /* } */
-
-  /* char buf[10]; */
-  /* printf("Hallo: "); */
-  /* int len = read_string(buf, 10); */
-  /* printf("len: %d\r\n", len); */
-  /* printf("Got: %s\r\n", buf); */
-  f_c[0] = compute_osr_fc(1500.0, 3);
-  f_c[1] = compute_osr_fc(1501.5, 3);
-  f_c[2] = compute_osr_fc(1503.0, 3);
-  f_c[3] = compute_osr_fc(1504.5, 3);
-  /* f_c[0] = (0b11 << 30) | 0b000000100000111010001011101110; */
-  /* f_c[1] = (0b11 << 30) | 0b000001100000111010001011101110; */
-  /* f_c[2] = (0b11 << 30) | 0b000001110000111010001011101110; */
-  /* f_c[3] = (0b11 << 30) | 0b000010000000111010001011101110; */
+  f_c[0] = compute_osr_fc(1500.0, 0);
+  f_c[1] = compute_osr_fc(1501.5, 0);
+  f_c[2] = compute_osr_fc(1503.0, 0);
+  f_c[3] = compute_osr_fc(1504.5, 0);
 
   uart_rx_enable();
   char call[10];
@@ -181,7 +139,10 @@ void start_transmission() {
   freq_reset_n_set(1);
   freq_start_set(0);
   freq_lo_div_set(2);
+  freq_ds_mode_set(0);
+  freq_ds_out_invert_set(0);
   freq_osr_fc_set(f_c[symbols[current]]);
+  *GPIO_OUT = 255;
 
   mtimecmp_set(CYCLES_PER_SYMBOL);
   mtime_set(0);
@@ -193,6 +154,7 @@ void end_transmission() {
   timer_interrupt_disable();
   freq_reset_n_set(0);
   freq_start_set(0);
+  *GPIO_OUT = 0;
 }
 
 uint32_t compute_osr_fc(double frequency, uint8_t OSR) {

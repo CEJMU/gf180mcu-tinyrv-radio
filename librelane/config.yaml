@@ -26,26 +26,26 @@ meta:
 
 DESIGN_NAME: chip_top
 VERILOG_FILES:
-- dir::../rtl/constants.sv
+# - dir::../rtl/constants.sv
 - dir::../rtl/src/chip_top.sv
 - dir::../rtl/src/chip_core.sv
-- dir::../rtl/src/cpu.sv
-- dir::../rtl/src/alu.sv
-- dir::../rtl/src/lo_gen.v
-- dir::../rtl/src/csr.sv
-- dir::../rtl/src/memory.sv
-- dir::../rtl/src/dsmod.v
-- dir::../rtl/src/regs.sv
-- dir::../rtl/src/freq_generator.sv
-- dir::../rtl/src/spi_master.sv
-- dir::../rtl/src/control.sv
-- dir::../rtl/src/i2c_master.sv
-- dir::../rtl/src/cordic_iterative.v
-- dir::../rtl/src/imm_gen.sv
-- dir::../rtl/src/uart_tx.v
-- dir::../rtl/src/uart_rx.v
-- dir::../rtl/src/cordic_slice.v
-- dir::../rtl/src/instructioncounter.sv
+# - dir::../rtl/src/cpu.sv
+# - dir::../rtl/src/alu.sv
+# - dir::../rtl/src/lo_gen.v
+# - dir::../rtl/src/csr.sv
+# - dir::../rtl/src/memory.sv
+# - dir::../rtl/src/dsmod.v
+# - dir::../rtl/src/regs.sv
+# - dir::../rtl/src/freq_generator.sv
+# - dir::../rtl/src/spi_master.sv
+# - dir::../rtl/src/control.sv
+# - dir::../rtl/src/i2c_master.sv
+# - dir::../rtl/src/cordic_iterative.v
+# - dir::../rtl/src/imm_gen.sv
+# - dir::../rtl/src/uart_tx.v
+# - dir::../rtl/src/uart_rx.v
+# - dir::../rtl/src/cordic_slice.v
+# - dir::../rtl/src/instructioncounter.sv
 
 # Enable plugin for better SystemVerilog support
 # USE_SLANG: True
@@ -70,6 +70,8 @@ IGNORE_DISCONNECTED_MODULES:
 - gf180mcu_fd_io__bi_24t
 - gf180mcu_ws_ip__id
 - gf180mcu_ws_ip__logo
+- gf180mcu_ws_ip__ce
+- gf180mcu_ws_ip__jku
 
 # Clock
 CLOCK_PORT: clk_PAD
@@ -182,33 +184,39 @@ MACROS:
         - dir::../ip/gf180mcu_ws_ip__logo/lib/gf180mcu_ws_ip__logo.lib
     instances:
       wafer_space_logo:
-        location: ["expr::$DIE_AREA[2] + -1000", "expr::$DIE_AREA[3] + -1000"]
+        location: ["expr::$DIE_AREA[2] + -169.75", "expr::$DIE_AREA[1] + 26"]
         orientation: N
 
-  # gf180mcu_fd_ip_sram__sram64x8m8wm1:
-  #   gds:
-  #     - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/gds/gf180mcu_fd_ip_sram__sram64x8m8wm1.gds
-  #   lef:
-  #     - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/lef/gf180mcu_fd_ip_sram__sram64x8m8wm1.lef
-  #   vh:
-  #     - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/verilog/gf180mcu_fd_ip_sram__sram64x8m8wm1__blackbox.v
-  #   lib:
-  #     "*_tt_025C_5v00":
-  #       - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/lib/gf180mcu_fd_ip_sram__sram64x8m8wm1__tt_025C_5v00.lib
-  #     "*_ff_n40C_5v50":
-  #       - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/lib/gf180mcu_fd_ip_sram__sram64x8m8wm1__ff_n40C_5v50.lib
-  #     "*_ss_125C_4v50":
-  #       - pdk_dir::libs.ref/gf180mcu_fd_ip_sram/lib/gf180mcu_fd_ip_sram__sram64x8m8wm1__ss_125C_4v50.lib
-  #   instances:
-  #     # Make sure to specify the SRAMs in pdn_cfg.tcl
-  #     i_chip_core.cpu.regs.sram:
-  #       location: [500, 500]
-  #       orientation: N
+  gf180mcu_ws_ip__ce:
+    gds:
+      - dir::../ip/gf180mcu_ws_ip__ce/gds/gf180mcu_ws_ip__ce.gds
+    lef:
+      - dir::../ip/gf180mcu_ws_ip__ce/lef/gf180mcu_ws_ip__ce.lef
+    vh:
+      - dir::../ip/gf180mcu_ws_ip__ce/vh/gf180mcu_ws_ip__ce.v
+    lib:
+      "*":
+        - dir::../ip/gf180mcu_ws_ip__ce/lib/gf180mcu_ws_ip__ce.lib
+    instances:
+      ce_logo:
+        location: ["expr::$DIE_AREA[2] + -169.75", "expr::$DIE_AREA[3] + -169.75"]
+        orientation: N
 
-# This is an alternative method compared to
-# specifying the power connections in the RTL
-# PDN_MACRO_CONNECTIONS:
-# - "i_chip_core.cpu.regs.sram VDD VSS VDD VSS"
+  gf180mcu_ws_ip__jku:
+    gds:
+      - dir::../ip/gf180mcu_ws_ip__jku/gds/gf180mcu_ws_ip__jku.gds
+    lef:
+      - dir::../ip/gf180mcu_ws_ip__jku/lef/gf180mcu_ws_ip__jku.lef
+    vh:
+      - dir::../ip/gf180mcu_ws_ip__jku/vh/gf180mcu_ws_ip__jku.v
+    lib:
+      "*":
+        - dir::../ip/gf180mcu_ws_ip__jku/lib/gf180mcu_ws_ip__jku.lib
+    instances:
+      jku_logo:
+        location: ["expr::$DIE_AREA[0] + 26", "expr::$DIE_AREA[3] + -169.75"]
+        orientation: N
+
 
 # Halo size around macros while cutting rows.
 # Workaround for: https://github.com/The-OpenROAD-Project/OpenROAD/issues/8868
@@ -224,9 +232,13 @@ PDN_CFG: dir::pdn_cfg.tcl
 LVS_FLATTEN_CELLS:
 - gf180mcu_ws_ip__id
 - gf180mcu_ws_ip__logo
+- gf180mcu_ws_ip__ce
+- gf180mcu_ws_ip__jku
 
 # gf180mcu_ws_ip__id/logo has no ports and components
 # therefore make it an abstract cell in the layout
 MAGIC_EXT_ABSTRACT_CELLS:
 - gf180mcu_ws_ip__id
 - gf180mcu_ws_ip__logo
+- gf180mcu_ws_ip__ce
+- gf180mcu_ws_ip__jku

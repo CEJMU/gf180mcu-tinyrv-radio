@@ -226,13 +226,15 @@ module memory #(
   // active | start | reset_n
   logic [ 2:0] freq_status;
   logic [31:0] osr_fc_reg;
-  logic [ 2:0] lo_reg;
+  logic [ 4:0] ds_lo_conf;
   freq_generator freq_inst (
       .clk(clk),
       .reset_n(freq_status[0]),
       .f_c(osr_fc_reg[29:0]),
       .osr_level(osr_fc_reg[31:30]),
-      .lo_div_sel(lo_reg),
+      .lo_div_sel(ds_lo_conf[2:0]),
+      .ds_mode(ds_lo_conf[3]),
+      .ds_invert(ds_lo_conf[4]),
       .start(freq_status[1]),
 
       .active(freq_status[2]),
@@ -268,6 +270,7 @@ module memory #(
       sclk_flag <= 0;
       i2c_mask <= 4'b1111;
       i2c_addr <= 6'b0;
+      ds_lo_conf <= 5'b00100;
       state <= IDLE;
       target <= SRAM;
     end else if (ce) begin
@@ -391,7 +394,7 @@ module memory #(
               MTIMECMPH_ADDR:      mtimecmp[63:32] <= datain_reg;
               FREQ_STATUS_ADDR:    freq_status[1:0] <= datain_reg[1:0];
               FREQ_OSR_FC_ADDR:    osr_fc_reg <= datain_reg;
-              FREQ_LO_DIV_ADDR:    lo_reg <= datain_reg[2:0];
+              FREQ_LO_DIV_ADDR:    ds_lo_conf <= datain_reg[4:0];
               UART_RX_STATUS_ADDR: uart_rx_status[0] <= datain_reg[0];
               // UART_RX_DATA_ADDR: lo_reg <= datain_reg[2:0];
               UART_RX_CPB_ADDR:    uart_rx_cpb <= datain_reg[15:0];
@@ -409,7 +412,7 @@ module memory #(
               MTIMECMPH_ADDR:      dataout <= mtimecmp[63:32];
               FREQ_STATUS_ADDR:    dataout <= {29'b0, freq_status};
               FREQ_OSR_FC_ADDR:    dataout <= osr_fc_reg;
-              FREQ_LO_DIV_ADDR:    dataout <= {29'b0, lo_reg};
+              FREQ_LO_DIV_ADDR:    dataout <= {27'b0, ds_lo_conf};
               UART_RX_STATUS_ADDR: dataout <= {29'b0, uart_rx_status};
               UART_RX_DATA_ADDR:   dataout <= {24'b0, uart_rx_data};
               UART_RX_CPB_ADDR:    dataout <= {16'b0, uart_rx_cpb};

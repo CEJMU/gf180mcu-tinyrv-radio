@@ -39,6 +39,7 @@ module chip_core #(
   // Set the bidir as output
   assign bidir_oe[17:10] = -1;
   assign bidir_oe[8:0] = -1;
+  assign bidir_oe[9] = 1;
   assign bidir_cs = '0;
   assign bidir_sl = '0;
   assign bidir_ie = ~bidir_oe;
@@ -47,35 +48,46 @@ module chip_core #(
   assign bidir_pd = '0;
 
   logic _unused;
-  assign _unused = &bidir_in;
+  assign _unused = &{bidir_in, input_in, rst_n};
 
-  cpu cpu (
-      .clk(clk),
-      .reset(rst_n),
-      .so(input_in[0]),
-      .gpio_in(input_in[4:1]),
+  logic [NUM_BIDIR_PADS-1:0] tmp;
+  assign bidir_out = tmp;
 
-      .si(bidir_out[0]),
-      .sclk(bidir_out[1]),
-      .sram_ce(bidir_out[2]),
-      .tx(bidir_out[3]),
-      .rx(input_in[6]),
-      .gpio_out(bidir_out[7:4]),
+  always_ff @(posedge clk) begin
+    tmp <= 2;
 
-      .scl(bidir_out[8]),
-      .sda_i(bidir_in[9]),
-      .sda_o(bidir_out[9]),
-      .sda_oe(bidir_oe[9]),
+    if (rst_n == 0) begin
+      tmp <= 0;
+    end
+  end
 
-      .cos_ds(bidir_out[10]),
-      .cos_ds_n(bidir_out[11]),
-      .sin_ds(bidir_out[12]),
-      .sin_ds_n(bidir_out[13]),
-      .lo_i(bidir_out[14]),
-      .lo_q(bidir_out[15]),
-      .lo_ix(bidir_out[16]),
-      .lo_qx(bidir_out[17])
-  );
+  // cpu cpu (
+  //     .clk(clk),
+  //     .reset(rst_n),
+  //     .so(input_in[0]),
+  //     .gpio_in(input_in[4:1]),
+
+  //     .si(bidir_out[0]),
+  //     .sclk(bidir_out[1]),
+  //     .sram_ce(bidir_out[2]),
+  //     .tx(bidir_out[3]),
+  //     .rx(input_in[6]),
+  //     .gpio_out(bidir_out[7:4]),
+
+  //     .scl(bidir_out[8]),
+  //     .sda_i(bidir_in[9]),
+  //     .sda_o(bidir_out[9]),
+  //     .sda_oe(bidir_oe[9]),
+
+  //     .cos_ds(bidir_out[10]),
+  //     .cos_ds_n(bidir_out[11]),
+  //     .sin_ds(bidir_out[12]),
+  //     .sin_ds_n(bidir_out[13]),
+  //     .lo_i(bidir_out[14]),
+  //     .lo_q(bidir_out[15]),
+  //     .lo_ix(bidir_out[16]),
+  //     .lo_qx(bidir_out[17])
+  // );
 
 endmodule
 

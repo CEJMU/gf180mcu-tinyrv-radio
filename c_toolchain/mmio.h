@@ -19,7 +19,7 @@ extern volatile unsigned int *const MTIMECMPH;
 
 extern volatile uint8_t *const FREQ_STATUS;
 extern volatile uint32_t *const FREQ_OSR_FC;
-extern volatile uint8_t *const FREQ_LO_DIV;
+extern volatile uint8_t *const FREQ_DS_LO_CONF;
 
 extern volatile uint8_t *const UART_RX_STATUS;
 extern volatile uint8_t *const UART_RX_DATA;
@@ -34,6 +34,8 @@ uint8_t freq_active_get();
 uint32_t freq_osr_fc_get();
 void freq_osr_fc_set(uint32_t osr_fc);
 void freq_lo_div_set(uint8_t lo_div);
+void freq_ds_mode_set(uint8_t mode);
+void freq_ds_out_invert_set(uint8_t out_invert);
 char uart_data_read();
 uint8_t uart_data_valid();
 void uart_rx_enable();

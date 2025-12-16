@@ -257,14 +257,14 @@ uint8_t wspr_compute_symbols(uint8_t *symbol_buffer, char *callsign,
   // Copying callsign
   char call[7];
   for (int i = 0; i < 6; i++) {
-    if (callsign[i] == '0')
+    if (callsign[i] == '\0')
       break;
     call[i] = callsign[i];
   }
 
   char loc[5];
   for (int i = 0; i < 4; i++) {
-    if (locator[i] == '0')
+    if (locator[i] == '\0')
       return 2; // Locator too short
     loc[i] = locator[i];
   }

@@ -215,6 +215,12 @@ module chip_top #(
     (* keep *)
     gf180mcu_ws_ip__logo wafer_space_logo ();
 
+    (* keep *)
+    gf180mcu_ws_ip__ce ce_logo ();
+
+    (* keep *)
+    gf180mcu_ws_ip__jku jku_logo ();
+
 endmodule
 
 `default_nettype wire

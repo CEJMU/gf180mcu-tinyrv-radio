@@ -16,7 +16,7 @@ volatile unsigned int *const MTIMECMPH = (unsigned int *)(GPIO_OUT + 20);
 
 volatile uint8_t *const FREQ_STATUS = (uint8_t *)(GPIO_OUT + 24);
 volatile uint32_t *const FREQ_OSR_FC = (uint32_t *)(GPIO_OUT + 28);
-volatile uint8_t *const FREQ_LO_DIV = (uint8_t *)(GPIO_OUT + 32);
+volatile uint8_t *const FREQ_DS_LO_CONF = (uint8_t *)(GPIO_OUT + 32);
 
 volatile uint8_t *const UART_RX_STATUS = (uint8_t *)(GPIO_OUT + 33);
 volatile uint8_t *const UART_RX_DATA = (uint8_t *)(GPIO_OUT + 34);
@@ -49,7 +49,34 @@ uint32_t freq_osr_fc_get() { return *FREQ_OSR_FC; }
 
 void freq_osr_fc_set(uint32_t osr_fc) { *FREQ_OSR_FC = osr_fc; }
 
-void freq_lo_div_set(uint8_t lo_div) { *FREQ_LO_DIV = lo_div; }
+void freq_lo_div_set(uint8_t lo_div) {
+  uint8_t tmp = *FREQ_DS_LO_CONF;
+  tmp = tmp & 0b11111000;       // Set [2:0] to 0
+  lo_div = lo_div & 0b00000111; // Set everything except [2:0] to zero
+  tmp = tmp | lo_div;           // Combine
+
+  *FREQ_DS_LO_CONF = tmp;
+}
+
+void freq_ds_mode_set(uint8_t mode) {
+  uint8_t tmp = *FREQ_DS_LO_CONF;
+  tmp = tmp & 0b11110111;
+  mode = mode & 0b00000001;
+  mode = mode << 3;
+  tmp = tmp | mode;
+
+  *FREQ_DS_LO_CONF = tmp;
+}
+
+void freq_ds_out_invert_set(uint8_t out_invert) {
+  uint8_t tmp = *FREQ_DS_LO_CONF;
+  tmp = tmp & 0b11101111;
+  out_invert = out_invert & 0b00000001;
+  out_invert = out_invert << 4;
+  tmp = tmp | out_invert;
+
+  *FREQ_DS_LO_CONF = tmp;
+}
 
 char uart_data_read() { return *UART_RX_DATA; }
 
